@@ -1,0 +1,19 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+.env
+
+# Node
+frontend/node_modules/
+frontend/build/
+
+# Data (don't commit logs/uploads/vector db/reports contents)
+logs/*
+uploads/*
+vector_db/*
+reports/*
+!logs/.gitkeep
+!uploads/.gitkeep
+!vector_db/.gitkeep
+!reports/.gitkeep
