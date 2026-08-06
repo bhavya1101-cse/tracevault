@@ -9,7 +9,10 @@ app = FastAPI(title="Cyber Black Box API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://cyber-black-box-demo.vercel.app/",  # replace with your actual Vercel URL once you have it
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
