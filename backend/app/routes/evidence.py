@@ -138,3 +138,16 @@ def get_report(evidence_id: str):
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=report_{evidence.filename}.pdf"},
     )
+from app.ai.analyzer import generate_recommendations
+
+@router.post("/{evidence_id}/recommend")
+def recommend_evidence(evidence_id: str):
+    """Generates AI recommendations for an already-analyzed evidence item."""
+    evidence = next((e for e in EVIDENCE_DB if e.id == evidence_id), None)
+    if evidence is None:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+    if evidence.ai_analysis is None:
+        raise HTTPException(status_code=400, detail="Evidence must be analyzed before generating recommendations")
+
+    evidence.recommendations = generate_recommendations(evidence.ai_analysis)
+    return evidence

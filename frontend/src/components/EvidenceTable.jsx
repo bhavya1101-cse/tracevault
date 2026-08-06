@@ -75,6 +75,22 @@ function EvidenceTable() {
     setAnalyzing((prev) => ({ ...prev, [id]: false }));
   };
 
+  const handleRecommend = async (id) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/evidence/${id}/recommend`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        fetchEvidence();
+      } else {
+        const err = await res.json();
+        alert(`Recommendation failed: ${err.detail}`);
+      }
+    } catch (e) {
+      alert("Recommendation failed: backend unreachable");
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setSearchResults(null);
@@ -178,6 +194,17 @@ function EvidenceTable() {
                         <span style={{ color: "#39c5cf" }}> ({e.ai_analysis.mitre_technique})</span>
                       )}
                     </div>
+                    {e.ai_analysis && (
+                      <div style={{ marginTop: "0.3rem" }}>
+                        {e.recommendations ? (
+                          <div style={{ fontSize: "0.75rem", color: "#3fb950" }}>
+                            ✔ Recommendations generated ({e.recommendations.containment_steps.length} containment steps)
+                          </div>
+                        ) : (
+                          <button onClick={() => handleRecommend(e.id)}>Generate Recommendations</button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <button onClick={() => handleAnalyze(e.id)} disabled={analyzing[e.id]}>

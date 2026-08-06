@@ -11,6 +11,19 @@ class AIAnalysis(BaseModel):
     attack_vector: str
     mitre_technique: str | None = None
     root_cause_explanation: str
+    compromised_assets: list["CompromisedAsset"] = []
+
+
+class CompromisedAsset(BaseModel):
+    asset_type: str
+    value: str
+    severity: str
+
+
+class Recommendations(BaseModel):
+    containment_steps: list[str]
+    recovery_steps: list[str]
+    future_prevention: list[str]
 
 
 class Evidence(BaseModel):
@@ -24,3 +37,4 @@ class Evidence(BaseModel):
     hash_value: str | None = None
     hash_algorithm: str = "SHA-256"
     ai_analysis: AIAnalysis | None = None
+    recommendations: Recommendations | None = None

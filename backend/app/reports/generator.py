@@ -72,13 +72,19 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
         elements.append(Spacer(1, 12))
 
         elements.append(Paragraph("Recommendations", heading_style))
-        elements.append(Paragraph(_basic_recommendation(a.attack_type, a.severity), body_style))
-    else:
-        elements.append(Paragraph("This evidence has not yet been analyzed by AI.", body_style))
-
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
+        if evidence.recommendations:
+            r = evidence.recommendations
+            elements.append(Paragraph("<b>Containment:</b>", body_style))
+            for step in r.containment_steps:
+                elements.append(Paragraph(f"• {step}", body_style))
+            elements.append(Paragraph("<b>Recovery:</b>", body_style))
+            for step in r.recovery_steps:
+                elements.append(Paragraph(f"• {step}", body_style))
+            elements.append(Paragraph("<b>Future Prevention:</b>", body_style))
+            for step in r.future_prevention:
+                elements.append(Paragraph(f"• {step}", body_style))
+        else:
+            elements.append(Paragraph(_basic_recommendation(a.attack_type, a.severity), body_style))
 
 
 def _build_table(data, header=False):
