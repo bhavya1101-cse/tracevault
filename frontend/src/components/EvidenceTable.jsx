@@ -4,6 +4,7 @@ function EvidenceTable() {
   const [evidence, setEvidence] = useState([]);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [verifyResults, setVerifyResults] = useState({});
 
   const fetchEvidence = () => {
     fetch("http://127.0.0.1:8000/api/evidence")
@@ -41,6 +42,12 @@ function EvidenceTable() {
     setUploading(false);
   };
 
+  const handleVerify = async (id) => {
+    const res = await fetch(`http://127.0.0.1:8000/api/evidence/${id}/verify`);
+    const data = await res.json();
+    setVerifyResults((prev) => ({ ...prev, [id]: data.verified }));
+  };
+
   return (
     <div style={{ padding: "2rem", color: "#c9d1d9", background: "#0d1117", minHeight: "100vh" }}>
       <h2 style={{ color: "#58a6ff" }}>Evidence Collection</h2>
@@ -52,24 +59,29 @@ function EvidenceTable() {
         </button>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid #30363d" }}>
             <th style={{ textAlign: "left" }}>Filename</th>
-            <th style={{ textAlign: "left" }}>Source</th>
-            <th style={{ textAlign: "left" }}>Event Type</th>
             <th style={{ textAlign: "left" }}>Status</th>
-            <th style={{ textAlign: "left" }}>Uploaded At</th>
+            <th style={{ textAlign: "left" }}>SHA-256 Hash</th>
+            <th style={{ textAlign: "left" }}>Integrity</th>
           </tr>
         </thead>
         <tbody>
           {evidence.map((e) => (
             <tr key={e.id} style={{ borderBottom: "1px solid #21262d" }}>
               <td>{e.filename}</td>
-              <td>{e.source}</td>
-              <td>{e.event_type}</td>
               <td>{e.status}</td>
-              <td>{new Date(e.uploaded_at).toLocaleString()}</td>
+              <td style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{e.hash_value}</td>
+              <td>
+                <button onClick={() => handleVerify(e.id)}>Verify</button>
+                {verifyResults[e.id] !== undefined && (
+                  <span style={{ marginLeft: "0.5rem", color: verifyResults[e.id] ? "#3fb950" : "#f85149" }}>
+                    {verifyResults[e.id] ? "✔ Verified" : "✘ Tampered"}
+                  </span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

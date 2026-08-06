@@ -9,3 +9,5 @@ class Evidence(BaseModel):
     event_type: str       # e.g. "log_file" — will get more specific in later modules
     status: str           # "uploaded" -> later "hashed" -> "analyzed"
     uploaded_at: datetime
+    hash_value: str | None = None
+    hash_algorithm: str = "SHA-256"
