@@ -7,6 +7,10 @@ class AIAnalysis(BaseModel):
     severity: str
     confidence_score: float
     threat_summary: str
+    entry_point: str
+    attack_vector: str
+    mitre_technique: str | None = None
+    root_cause_explanation: str
 
 
 class Evidence(BaseModel):

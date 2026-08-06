@@ -33,11 +33,37 @@ function NetworkGraph() {
   const [evidenceCount, setEvidenceCount] = useState(0);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/evidence")
-      .then((res) => res.json())
-      .then((data) => setEvidenceCount(data.length))
-      .catch(() => console.error("Could not load evidence"));
-  }, []);
+  fetch("http://127.0.0.1:8000/api/evidence")
+    .then((res) => res.json())
+    .then((data) => {
+      setEvidenceCount(data.length);
+      const analyzed = data.filter((e) => e.ai_analysis);
+      if (analyzed.length > 0) {
+        const dynamicNodes = [
+          { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
+          ...analyzed.map((e, i) => ({
+            id: e.id,
+            position: { x: (i + 1) * 250, y: 0 },
+            data: { label: `${e.ai_analysis.entry_point} (${e.filename})` },
+            style: nodeStyle(
+              e.ai_analysis.severity === "Critical" ? "#da3633" :
+              e.ai_analysis.severity === "High" ? "#f85149" : "#d29922"
+            ),
+          })),
+        ];
+        const dynamicEdges = analyzed.map((e, i) => ({
+          id: `edge-${i}`,
+          source: i === 0 ? "attacker" : analyzed[i - 1].id,
+          target: e.id,
+          animated: true,
+          style: { stroke: "#58a6ff" },
+        }));
+        setNodes(dynamicNodes);
+        setEdges(dynamicEdges);
+      }
+    })
+    .catch(() => console.error("Could not load evidence"));
+}, []);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),

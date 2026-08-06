@@ -160,6 +160,15 @@ function EvidenceTable() {
                     <div style={{ fontSize: "0.75rem", color: "#8b949e" }}>
                       {e.ai_analysis.threat_summary}
                     </div>
+                    <div style={{ fontSize: "0.75rem", marginTop: "0.3rem" }}>
+                      <strong>Entry:</strong> {e.ai_analysis.entry_point}
+                    </div>
+                    <div style={{ fontSize: "0.75rem" }}>
+                      <strong>Vector:</strong> {e.ai_analysis.attack_vector}
+                      {e.ai_analysis.mitre_technique && (
+                        <span style={{ color: "#39c5cf" }}> ({e.ai_analysis.mitre_technique})</span>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <button onClick={() => handleAnalyze(e.id)} disabled={analyzing[e.id]}>
