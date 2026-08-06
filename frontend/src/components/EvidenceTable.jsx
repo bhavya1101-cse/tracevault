@@ -6,6 +6,8 @@ function EvidenceTable() {
   const [uploading, setUploading] = useState(false);
   const [verifyResults, setVerifyResults] = useState({});
   const [analyzing, setAnalyzing] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null);
 
   const fetchEvidence = () => {
     fetch("http://127.0.0.1:8000/api/evidence")
@@ -66,6 +68,29 @@ function EvidenceTable() {
     setAnalyzing((prev) => ({ ...prev, [id]: false }));
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/evidence/search?q=${encodeURIComponent(searchQuery)}`
+      );
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (e) {
+      alert("Search failed: backend unreachable");
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchResults(null);
+    setSearchQuery("");
+  };
+
+  const displayedEvidence = searchResults ?? evidence;
+
   return (
     <div style={{ padding: "2rem", color: "#c9d1d9", background: "#0d1117", minHeight: "100vh" }}>
       <h2 style={{ color: "#58a6ff" }}>Evidence Collection</h2>
@@ -75,6 +100,24 @@ function EvidenceTable() {
         <button onClick={handleUpload} disabled={uploading || !file} style={{ marginLeft: "1rem" }}>
           {uploading ? "Uploading..." : "Upload"}
         </button>
+      </div>
+
+      <div style={{ marginBottom: "1rem" }}>
+        <input
+          type="text"
+          placeholder="Semantic search (e.g. brute force login)"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          style={{ width: "300px" }}
+        />
+        <button onClick={handleSearch} style={{ marginLeft: "0.5rem" }}>
+          Search
+        </button>
+        {searchResults && (
+          <button onClick={handleClearSearch} style={{ marginLeft: "0.5rem" }}>
+            Clear
+          </button>
+        )}
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
@@ -89,7 +132,7 @@ function EvidenceTable() {
           </tr>
         </thead>
         <tbody>
-          {evidence.map((e) => (
+          {displayedEvidence.map((e) => (
             <tr key={e.id} style={{ borderBottom: "1px solid #21262d" }}>
               <td>{e.filename}</td>
               <td>{e.source}</td>

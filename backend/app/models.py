@@ -1,11 +1,13 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+
 class AIAnalysis(BaseModel):
     attack_type: str
-    severity: str          # "Low" | "Medium" | "High" | "Critical"
-    confidence_score: float  # 0.0 - 1.0
+    severity: str
+    confidence_score: float
     threat_summary: str
+
 
 class Evidence(BaseModel):
     """Represents one uploaded piece of forensic evidence."""

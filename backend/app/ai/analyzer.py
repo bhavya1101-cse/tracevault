@@ -20,11 +20,10 @@ Log excerpt:
 
 def analyze_log(log_content: str) -> AIAnalysis:
     """Sends log content to the local LLM and parses a structured analysis."""
-    prompt = ANALYSIS_PROMPT.format(log_content=log_content[:3000])  # cap length for speed
+    prompt = ANALYSIS_PROMPT.format(log_content=log_content[:3000])
     raw_response = llm.invoke(prompt)
 
     try:
-        # Some models wrap JSON in markdown fences - strip those if present
         cleaned = raw_response.strip().strip("```").strip("json").strip()
         data = json.loads(cleaned)
         return AIAnalysis(
@@ -34,7 +33,6 @@ def analyze_log(log_content: str) -> AIAnalysis:
             threat_summary=data.get("threat_summary", "No summary available."),
         )
     except (json.JSONDecodeError, ValueError, TypeError):
-        # Fallback if the model didn't return clean JSON - still gives the user something
         return AIAnalysis(
             attack_type="Unknown",
             severity="Low",
