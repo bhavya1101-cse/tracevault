@@ -5,9 +5,11 @@ from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
 from app.models import Evidence
+from app.ai.analyzer import analyze_log
 
 router = APIRouter(prefix="/api/evidence", tags=["evidence"])
 
+# In-memory storage for now - replaced by a real DB in a later module
 EVIDENCE_DB: list[Evidence] = []
 
 UPLOAD_DIR = "uploads"
@@ -21,6 +23,8 @@ def compute_sha256(data: bytes) -> str:
 
 @router.post("/upload", response_model=Evidence)
 async def upload_evidence(file: UploadFile = File(...), source: str = "manual_upload"):
+    """Accepts a log file, saves it to disk, hashes it, and records it as evidence."""
+
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -55,6 +59,7 @@ async def upload_evidence(file: UploadFile = File(...), source: str = "manual_up
 
 @router.get("", response_model=list[Evidence])
 def list_evidence():
+    """Returns all evidence records collected so far."""
     return EVIDENCE_DB
 
 
@@ -83,3 +88,26 @@ def verify_evidence(evidence_id: str):
         "current_hash": current_hash,
         "verified": verified,
     }
+
+
+@router.post("/{evidence_id}/analyze")
+def analyze_evidence(evidence_id: str):
+    """Reads the evidence file, runs AI analysis, and stores the result."""
+    evidence = next((e for e in EVIDENCE_DB if e.id == evidence_id), None)
+    if evidence is None:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+
+    saved_filename = f"{evidence.id}_{evidence.filename}"
+    file_path = os.path.join(UPLOAD_DIR, saved_filename)
+
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Original file missing from disk")
+
+    with open(file_path, "r", errors="ignore") as f:
+        log_content = f.read()
+
+    analysis = analyze_log(log_content)
+    evidence.ai_analysis = analysis
+    evidence.status = "analyzed"
+
+    return evidence

@@ -1,13 +1,20 @@
 from pydantic import BaseModel
 from datetime import datetime
 
+class AIAnalysis(BaseModel):
+    attack_type: str
+    severity: str          # "Low" | "Medium" | "High" | "Critical"
+    confidence_score: float  # 0.0 - 1.0
+    threat_summary: str
+
 class Evidence(BaseModel):
     """Represents one uploaded piece of forensic evidence."""
     id: str
     filename: str
-    source: str          # e.g. "syslog", "apache", "windows_event_log", "manual_upload"
-    event_type: str       # e.g. "log_file" — will get more specific in later modules
-    status: str           # "uploaded" -> later "hashed" -> "analyzed"
+    source: str
+    event_type: str
+    status: str
     uploaded_at: datetime
     hash_value: str | None = None
     hash_algorithm: str = "SHA-256"
+    ai_analysis: AIAnalysis | None = None
