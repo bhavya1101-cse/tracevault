@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routes import evidence
 
 app = FastAPI(title="Cyber Black Box API")
 
-# This is the permission slip we're giving to React
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -12,12 +12,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(evidence.router)
+
 @app.get("/")
 def read_root():
-    """Health check endpoint - confirms the API is alive."""
     return {"status": "online", "service": "Cyber Black Box API"}
 
 @app.get("/api/health")
 def health_check():
-    """Used later by the frontend/monitoring to verify backend is reachable."""
     return {"status": "ok"}
