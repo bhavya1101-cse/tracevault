@@ -1,6 +1,8 @@
 import os
 import uuid
 import hashlib
+from fastapi.responses import StreamingResponse
+from app.reports.generator import generate_report_pdf
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
@@ -123,3 +125,16 @@ def analyze_evidence(evidence_id: str):
     add_to_vector_store(evidence.id, evidence.filename, log_content)
 
     return evidence
+@router.get("/{evidence_id}/report")
+def get_report(evidence_id: str):
+    """Generates and returns a PDF investigation report for one evidence item."""
+    evidence = next((e for e in EVIDENCE_DB if e.id == evidence_id), None)
+    if evidence is None:
+        raise HTTPException(status_code=404, detail="Evidence not found")
+
+    pdf_buffer = generate_report_pdf(evidence)
+    return StreamingResponse(
+        pdf_buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=report_{evidence.filename}.pdf"},
+    )

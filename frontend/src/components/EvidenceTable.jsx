@@ -9,6 +9,13 @@ function EvidenceTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
 
+  const severityColors = {
+    Low: "#3fb950",
+    Medium: "#d29922",
+    High: "#f85149",
+    Critical: "#da3633",
+  };
+
   const fetchEvidence = () => {
     fetch("http://127.0.0.1:8000/api/evidence")
       .then((res) => res.json())
@@ -129,6 +136,8 @@ function EvidenceTable() {
             <th style={{ textAlign: "left" }}>SHA-256 Hash</th>
             <th style={{ textAlign: "left" }}>Integrity</th>
             <th style={{ textAlign: "left" }}>AI Analysis</th>
+            <th style={{ textAlign: "left" }}>Compromised Assets</th>
+            <th style={{ textAlign: "left" }}>Report</th>
           </tr>
         </thead>
         <tbody>
@@ -175,6 +184,33 @@ function EvidenceTable() {
                     {analyzing[e.id] ? "Analyzing..." : "Analyze"}
                   </button>
                 )}
+              </td>
+              <td>
+                {e.ai_analysis && e.ai_analysis.compromised_assets && e.ai_analysis.compromised_assets.length > 0 ? (
+                  <div>
+                    {e.ai_analysis.compromised_assets.map((a, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          fontSize: "0.75rem",
+                          color: severityColors[a.severity] || "#8b949e",
+                          marginBottom: "0.15rem",
+                        }}
+                      >
+                        [{a.asset_type}] {a.value}
+                      </div>
+                    ))}
+                  </div>
+                ) : e.ai_analysis ? (
+                  <span style={{ fontSize: "0.75rem", color: "#8b949e" }}>None identified</span>
+                ) : (
+                  <span style={{ fontSize: "0.75rem", color: "#8b949e" }}>-</span>
+                )}
+              </td>
+              <td>
+                <a href={"http://127.0.0.1:8000/api/evidence/" + e.id + "/report"} target="_blank" rel="noopener noreferrer">
+                  <button>Download Report</button>
+                </a>
               </td>
             </tr>
           ))}
