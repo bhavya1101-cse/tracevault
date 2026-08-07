@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
 function EvidenceTable() {
-  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const [evidence, setEvidence] = useState([]);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -98,7 +99,9 @@ function EvidenceTable() {
       return;
     }
     try {
-      const res = await fetch(`${API_URL}/api/evidence/search?q=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(
+        `${API_URL}/api/evidence/search?q=${encodeURIComponent(searchQuery)}`
+      );
       const data = await res.json();
       setSearchResults(data);
     } catch (e) {
@@ -193,17 +196,15 @@ function EvidenceTable() {
                         <span style={{ color: "#39c5cf" }}> ({e.ai_analysis.mitre_technique})</span>
                       )}
                     </div>
-                    {e.ai_analysis && (
-                      <div style={{ marginTop: "0.3rem" }}>
-                        {e.recommendations ? (
-                          <div style={{ fontSize: "0.75rem", color: "#3fb950" }}>
-                            ✔ Recommendations generated ({e.recommendations.containment_steps.length} containment steps)
-                          </div>
-                        ) : (
-                          <button onClick={() => handleRecommend(e.id)}>Generate Recommendations</button>
-                        )}
-                      </div>
-                    )}
+                    <div style={{ marginTop: "0.3rem" }}>
+                      {e.recommendations ? (
+                        <div style={{ fontSize: "0.75rem", color: "#3fb950" }}>
+                          ✔ Recommendations generated ({e.recommendations.containment_steps.length} containment steps)
+                        </div>
+                      ) : (
+                        <button onClick={() => handleRecommend(e.id)}>Generate Recommendations</button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <button onClick={() => handleAnalyze(e.id)} disabled={analyzing[e.id]}>

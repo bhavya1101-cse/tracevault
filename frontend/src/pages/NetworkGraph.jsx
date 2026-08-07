@@ -2,6 +2,18 @@ import { useEffect, useState, useCallback } from "react";
 import ReactFlow, { Background, Controls, applyNodeChanges, applyEdgeChanges } from "reactflow";
 import "reactflow/dist/style.css";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
+function nodeStyle(color) {
+  return {
+    background: "#161b22",
+    color: "#c9d1d9",
+    border: `2px solid ${color}`,
+    borderRadius: "8px",
+    padding: "10px",
+  };
+}
+
 const baseNodes = [
   { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
   { id: "laptop", position: { x: 250, y: 0 }, data: { label: "Employee Laptop" }, style: nodeStyle("#d29922") },
@@ -17,53 +29,43 @@ const baseEdges = [
   { id: "e4", source: "database", target: "dc", animated: true, style: { stroke: "#58a6ff" } },
 ];
 
-function nodeStyle(color) {
-  return {
-    background: "#161b22",
-    color: "#c9d1d9",
-    border: `2px solid ${color}`,
-    borderRadius: "8px",
-    padding: "10px",
-  };
-}
-
 function NetworkGraph() {
   const [nodes, setNodes] = useState(baseNodes);
   const [edges, setEdges] = useState(baseEdges);
   const [evidenceCount, setEvidenceCount] = useState(0);
 
   useEffect(() => {
-  fetch("http://127.0.0.1:8000/api/evidence")
-    .then((res) => res.json())
-    .then((data) => {
-      setEvidenceCount(data.length);
-      const analyzed = data.filter((e) => e.ai_analysis);
-      if (analyzed.length > 0) {
-        const dynamicNodes = [
-          { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
-          ...analyzed.map((e, i) => ({
-            id: e.id,
-            position: { x: (i + 1) * 250, y: 0 },
-            data: { label: `${e.ai_analysis.entry_point} (${e.filename})` },
-            style: nodeStyle(
-              e.ai_analysis.severity === "Critical" ? "#da3633" :
-              e.ai_analysis.severity === "High" ? "#f85149" : "#d29922"
-            ),
-          })),
-        ];
-        const dynamicEdges = analyzed.map((e, i) => ({
-          id: `edge-${i}`,
-          source: i === 0 ? "attacker" : analyzed[i - 1].id,
-          target: e.id,
-          animated: true,
-          style: { stroke: "#58a6ff" },
-        }));
-        setNodes(dynamicNodes);
-        setEdges(dynamicEdges);
-      }
-    })
-    .catch(() => console.error("Could not load evidence"));
-}, []);
+    fetch(`${API_URL}/api/evidence`)
+      .then((res) => res.json())
+      .then((data) => {
+        setEvidenceCount(data.length);
+        const analyzed = data.filter((e) => e.ai_analysis);
+        if (analyzed.length > 0) {
+          const dynamicNodes = [
+            { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
+            ...analyzed.map((e, i) => ({
+              id: e.id,
+              position: { x: (i + 1) * 250, y: 0 },
+              data: { label: `${e.ai_analysis.entry_point} (${e.filename})` },
+              style: nodeStyle(
+                e.ai_analysis.severity === "Critical" ? "#da3633" :
+                e.ai_analysis.severity === "High" ? "#f85149" : "#d29922"
+              ),
+            })),
+          ];
+          const dynamicEdges = analyzed.map((e, i) => ({
+            id: `edge-${i}`,
+            source: i === 0 ? "attacker" : analyzed[i - 1].id,
+            target: e.id,
+            animated: true,
+            style: { stroke: "#58a6ff" },
+          }));
+          setNodes(dynamicNodes);
+          setEdges(dynamicEdges);
+        }
+      })
+      .catch(() => console.error("Could not load evidence"));
+  }, []);
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
@@ -78,8 +80,7 @@ function NetworkGraph() {
     <div style={{ background: "#0d1117", minHeight: "100vh", color: "#c9d1d9", padding: "2rem" }}>
       <h1 style={{ color: "#58a6ff" }}>Attack Path — Network Graph</h1>
       <p style={{ color: "#8b949e" }}>
-        Representative attack path based on {evidenceCount} pieces of evidence collected. Drag nodes to
-        rearrange; this will connect to real extracted asset data in Module 8 (Root Cause Analysis).
+        Attack path based on {evidenceCount} pieces of evidence collected. Drag nodes to rearrange.
       </p>
       <div style={{ height: "500px", background: "#161b22", borderRadius: "10px" }}>
         <ReactFlow
