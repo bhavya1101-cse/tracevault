@@ -11,7 +11,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://cyber-black-box.vercel.app/",  # replace with your actual Vercel URL once you have it
+        "https://cyber-black-box.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
