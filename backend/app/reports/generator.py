@@ -18,7 +18,7 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
 
     elements = []
 
-    elements.append(Paragraph("Cyber Black Box — Investigation Report", title_style))
+    elements.append(Paragraph("Cyber Black Box - Investigation Report", title_style))
     elements.append(Spacer(1, 12))
 
     elements.append(Paragraph("Incident Summary", heading_style))
@@ -76,15 +76,21 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
             r = evidence.recommendations
             elements.append(Paragraph("<b>Containment:</b>", body_style))
             for step in r.containment_steps:
-                elements.append(Paragraph(f"• {step}", body_style))
+                elements.append(Paragraph(f"- {step}", body_style))
             elements.append(Paragraph("<b>Recovery:</b>", body_style))
             for step in r.recovery_steps:
-                elements.append(Paragraph(f"• {step}", body_style))
+                elements.append(Paragraph(f"- {step}", body_style))
             elements.append(Paragraph("<b>Future Prevention:</b>", body_style))
             for step in r.future_prevention:
-                elements.append(Paragraph(f"• {step}", body_style))
+                elements.append(Paragraph(f"- {step}", body_style))
         else:
             elements.append(Paragraph(_basic_recommendation(a.attack_type, a.severity), body_style))
+    else:
+        elements.append(Paragraph("This evidence has not yet been analyzed by AI.", body_style))
+
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
 
 
 def _build_table(data, header=False):
@@ -102,8 +108,8 @@ def _build_table(data, header=False):
 
 
 def _basic_recommendation(attack_type: str, severity: str) -> str:
-    """Placeholder rule-based recommendation - Module 11 will replace this with full AI-generated guidance."""
-    base = f"Given the identified {attack_type} activity at {severity} severity, immediate containment " \
-           "of affected assets is recommended, followed by credential resets for any implicated accounts " \
-           "and a review of related access logs for lateral movement."
-    return base
+    return (
+        f"Given the identified {attack_type} activity at {severity} severity, immediate containment "
+        "of affected assets is recommended, followed by credential resets for any implicated accounts "
+        "and a review of related access logs for lateral movement."
+    )

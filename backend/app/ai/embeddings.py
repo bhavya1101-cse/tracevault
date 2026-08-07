@@ -11,7 +11,7 @@ collection = chroma_client.get_or_create_collection(name="evidence_logs")
 def embed_text(text: str) -> list[float]:
     """Converts text into a vector using Gemini's embedding model."""
     result = genai.embed_content(
-        model="models/text-embedding-004",
+        model="models/gemini-embedding-001",
         content=text[:3000],
     )
     return result["embedding"]
