@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 function EvidenceTable() {
+  const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
   const [evidence, setEvidence] = useState([]);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -17,7 +18,7 @@ function EvidenceTable() {
   };
 
   const fetchEvidence = () => {
-    fetch("http://127.0.0.1:8000/api/evidence")
+    fetch(`${API_URL}/api/evidence`)
       .then((res) => res.json())
       .then(setEvidence)
       .catch(() => console.error("Could not load evidence"));
@@ -35,7 +36,7 @@ function EvidenceTable() {
     formData.append("source", "manual_upload");
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/evidence/upload", {
+      const res = await fetch(`${API_URL}/api/evidence/upload`, {
         method: "POST",
         body: formData,
       });
@@ -53,7 +54,7 @@ function EvidenceTable() {
   };
 
   const handleVerify = async (id) => {
-    const res = await fetch(`http://127.0.0.1:8000/api/evidence/${id}/verify`);
+    const res = await fetch(`${API_URL}/api/evidence/${id}/verify`);
     const data = await res.json();
     setVerifyResults((prev) => ({ ...prev, [id]: data.verified }));
   };
@@ -61,7 +62,7 @@ function EvidenceTable() {
   const handleAnalyze = async (id) => {
     setAnalyzing((prev) => ({ ...prev, [id]: true }));
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/evidence/${id}/analyze`, {
+      const res = await fetch(`${API_URL}/api/evidence/${id}/analyze`, {
         method: "POST",
       });
       if (res.ok) {
@@ -77,7 +78,7 @@ function EvidenceTable() {
 
   const handleRecommend = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/evidence/${id}/recommend`, {
+      const res = await fetch(`${API_URL}/api/evidence/${id}/recommend`, {
         method: "POST",
       });
       if (res.ok) {
@@ -97,9 +98,7 @@ function EvidenceTable() {
       return;
     }
     try {
-      const res = await fetch(
-        `http://127.0.0.1:8000/api/evidence/search?q=${encodeURIComponent(searchQuery)}`
-      );
+      const res = await fetch(`${API_URL}/api/evidence/search?q=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
       setSearchResults(data);
     } catch (e) {
@@ -235,7 +234,7 @@ function EvidenceTable() {
                 )}
               </td>
               <td>
-                <a href={"http://127.0.0.1:8000/api/evidence/" + e.id + "/report"} target="_blank" rel="noopener noreferrer">
+                <a href={API_URL + "/api/evidence/" + e.id + "/report"} target="_blank" rel="noopener noreferrer">
                   <button>Download Report</button>
                 </a>
               </td>

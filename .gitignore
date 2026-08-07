@@ -17,3 +17,5 @@ reports/*
 !uploads/.gitkeep
 !vector_db/.gitkeep
 !reports/.gitkeep
+.vercel
+.env*
