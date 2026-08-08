@@ -1,8 +1,8 @@
 import json
 import os
 import google.generativeai as genai
-from app.models import AIAnalysis, CompromisedAsset
 from app.models import AIAnalysis, CompromisedAsset, Recommendations
+
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-3.1-flash-lite")
 
@@ -26,6 +26,24 @@ If no specific assets are clearly identifiable, return an empty array. Do not in
 
 Log excerpt:
 {log_content}
+"""
+
+RECOMMENDATION_PROMPT = """You are a cybersecurity incident responder. Based on this incident analysis, respond ONLY with valid JSON in exactly this shape:
+
+{{
+  "containment_steps": ["<short actionable step>", "..."],
+  "recovery_steps": ["<short actionable step>", "..."],
+  "future_prevention": ["<short actionable step>", "..."]
+}}
+
+Provide 2-4 items per list. Be specific to this incident, not generic.
+
+Incident details:
+Attack Type: {attack_type}
+Severity: {severity}
+Entry Point: {entry_point}
+Attack Vector: {attack_vector}
+Root Cause: {root_cause_explanation}
 """
 
 
@@ -70,6 +88,7 @@ def analyze_log(log_content: str) -> AIAnalysis:
             root_cause_explanation="Analysis failed to parse.",
             compromised_assets=[],
         )
+
 
 def generate_recommendations(analysis: AIAnalysis) -> Recommendations:
     """Generates containment/recovery/prevention guidance for a given analysis."""
