@@ -2,7 +2,7 @@ import json
 import os
 import google.generativeai as genai
 from app.models import AIAnalysis, CompromisedAsset
-
+from app.models import AIAnalysis, CompromisedAsset, Recommendations
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
@@ -69,4 +69,31 @@ def analyze_log(log_content: str) -> AIAnalysis:
             mitre_technique=None,
             root_cause_explanation="Analysis failed to parse.",
             compromised_assets=[],
+        )
+
+def generate_recommendations(analysis: AIAnalysis) -> Recommendations:
+    """Generates containment/recovery/prevention guidance for a given analysis."""
+    prompt = RECOMMENDATION_PROMPT.format(
+        attack_type=analysis.attack_type,
+        severity=analysis.severity,
+        entry_point=analysis.entry_point,
+        attack_vector=analysis.attack_vector,
+        root_cause_explanation=analysis.root_cause_explanation,
+    )
+
+    try:
+        response = model.generate_content(prompt)
+        raw_response = response.text
+        cleaned = raw_response.strip().strip("```").strip("json").strip()
+        data = json.loads(cleaned)
+        return Recommendations(
+            containment_steps=data.get("containment_steps", []),
+            recovery_steps=data.get("recovery_steps", []),
+            future_prevention=data.get("future_prevention", []),
+        )
+    except Exception:
+        return Recommendations(
+            containment_steps=["Isolate affected systems pending manual review."],
+            recovery_steps=["Manual investigation required - AI recommendation generation failed."],
+            future_prevention=["Review incident manually to determine prevention steps."],
         )
