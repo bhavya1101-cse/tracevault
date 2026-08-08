@@ -4,7 +4,7 @@ import google.generativeai as genai
 from app.models import AIAnalysis, CompromisedAsset
 from app.models import AIAnalysis, CompromisedAsset, Recommendations
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 ANALYSIS_PROMPT = """You are a cybersecurity analyst. Analyze the following security log excerpt and respond ONLY with valid JSON, no other text, in exactly this shape:
 
