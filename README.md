@@ -1,406 +1,142 @@
-# 🛡️ Cyber Black Box
+# 🔐 TRACEVAULT
 
-### *Reconstruct Every Attack. Preserve Every Evidence.*
+### AI-Powered Email Threat Detection, Geolocation & Forensic Intelligence Platform
 
-Cyber Black Box is an **AI-powered digital forensics and attack reconstruction platform** designed to simplify cybersecurity investigations. Inspired by the concept of an aircraft's black box, the platform collects, preserves, correlates, and analyzes digital evidence to reconstruct the sequence of events surrounding a cyberattack.
+TRACEVAULT is a cybersecurity platform designed to **detect, analyze, investigate, and correlate suspicious email threats**. It combines AI-based threat detection with email forensics, threat intelligence, IP geolocation, and evidence analysis to help users and security teams understand **what happened, why an email is risky, and what infrastructure may be associated with the threat**.
 
----
+## 🚨 TraceMail + TRACEVAULT
 
-## 🚨 Problem Statement
-
-Modern cyberattacks generate massive amounts of security data across endpoints, networks, servers, applications, and cloud environments.
-
-However, this evidence is often:
-
-* Fragmented across multiple sources
-* Difficult to correlate manually
-* Time-consuming to investigate
-* Challenging to reconstruct into a clear attack timeline
-* Difficult to convert into investigation-ready reports
-
-This creates delays in identifying **how an attack happened, what was compromised, and where the attack originated.**
-
----
-
-## 💡 Our Solution
-
-**Cyber Black Box** acts as a centralized digital forensic investigation platform that transforms scattered security evidence into an understandable attack narrative.
-
-The platform:
-
-1. 📥 Collects digital evidence from multiple sources
-2. 🔐 Preserves evidence integrity
-3. 🔗 Correlates security events and artifacts
-4. 🧠 Uses AI-assisted analysis to identify suspicious activity
-5. 🕒 Reconstructs the attack timeline
-6. 🎯 Identifies compromised assets and potential entry points
-7. 📊 Generates investigation-ready forensic reports
-8. 🛠️ Provides response and mitigation recommendations
-
----
-
-## ⚙️ How It Works
+TRACEVAULT works together with **TraceMail**, a Gmail-integrated security assistant.
 
 ```text
-        ┌──────────────────────────┐
-        │      Evidence Sources    │
-        │                          │
-        │ Endpoints • Network      │
-        │ Logs • Cloud • Servers   │
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │    Evidence Collection   │
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │ Integrity & Preservation │
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │ Event Correlation &      │
-        │ AI-Assisted Analysis     │
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │ Attack Timeline          │
-        │ Reconstruction           │
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │ Compromised Assets &     │
-        │ Root Cause Identification│
-        └────────────┬─────────────┘
-                     │
-                     ▼
-        ┌──────────────────────────┐
-        │ Forensic Report &        │
-        │ Response Recommendations │
-        └──────────────────────────┘
+📧 Email Received
+       ↓
+🔍 TraceMail
+       ↓
+🤖 Threat Detection
+       ↓
+⚠️ Risk Score & Explanation
+       ↓
+🔎 Investigate in TRACEVAULT
+       ↓
+🕵️ Email Forensics
+       ↓
+🌐 Threat & Geo Intelligence
+       ↓
+📊 Attack Correlation
+       ↓
+📄 Forensic Report
 ```
 
----
+### ✨ Key Features
 
-## ✨ Key Features
+* 🤖 **AI-Powered Threat Detection** — Identifies phishing, impersonation, suspicious content, and other email-based threats.
+* 📩 **Email Header Forensics** — Examines available email headers and routing information.
+* 👤 **Sender & Domain Analysis** — Detects suspicious sender identities and lookalike domains.
+* 🔗 **URL & Link Analysis** — Extracts and evaluates potentially malicious or suspicious links.
+* 🌐 **IP & Geolocation Intelligence** — Provides available geographic, network, ASN, and ISP information for relevant IP infrastructure.
+* 🎯 **Risk Scoring** — Combines multiple indicators into an understandable threat score.
+* 🧠 **AI-Powered Explanation** — Explains why an email was classified as suspicious.
+* 🕸️ **Threat Correlation** — Connects related indicators such as senders, domains, URLs, and IP addresses.
+* 📊 **Forensic Dashboard** — Presents investigation findings through an analyst-friendly interface.
+* 📄 **Forensic Reporting** — Generates a structured summary of the investigation and evidence.
 
-### 🔍 Digital Evidence Collection
+## 👥 Who Is It For?
 
-Collect and organize security evidence from multiple digital sources.
+| User                       | Purpose                                      |
+| -------------------------- | -------------------------------------------- |
+| 👨‍🎓 Students / Employees | Quickly identify suspicious emails           |
+| 👨‍💼 Organizations        | Strengthen email threat awareness            |
+| 🛡️ SOC Analysts           | Investigate and correlate reported emails    |
+| 🔎 Incident Responders     | Analyze evidence and reconstruct incidents   |
+| 🏢 Security Teams          | Identify patterns across email-based attacks |
 
-### 🔐 Evidence Integrity
-
-Maintain the integrity of collected evidence to support reliable forensic investigation.
-
-### 🔗 Intelligent Event Correlation
-
-Connect related security events and artifacts to identify meaningful attack patterns.
-
-### 🕒 Attack Timeline Reconstruction
-
-Transform individual security events into a chronological representation of the attack.
-
-### 🎯 Compromised Asset Identification
-
-Identify potentially affected systems and assets involved in the incident.
-
-### 🧠 AI-Assisted Investigation
-
-Use AI to assist investigators in analyzing evidence, understanding attack behavior, and identifying important findings.
-
-### 📑 Automated Forensic Reports
-
-Generate structured reports containing investigation findings and recommended actions.
-
-### 🛠️ Response Recommendations
-
-Provide actionable recommendations to help security teams respond to identified threats.
-
----
-
-## 🧠 AI-Powered Investigation
-
-Cyber Black Box combines **cybersecurity investigation workflows with AI-assisted analysis** to reduce the manual effort required during incident investigation.
-
-Instead of forcing investigators to manually examine isolated events, the system helps transform raw evidence into:
+## 🏗️ Conceptual Architecture
 
 ```text
-Raw Evidence
-     ↓
-Security Events
-     ↓
-Correlated Events
-     ↓
-Attack Pattern
-     ↓
-Timeline
-     ↓
-Investigation Findings
-     ↓
-Forensic Report
+                    ┌──────────────┐
+                    │    GMAIL     │
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │  TRACEMAIL   │
+                    │ Gmail Add-on │
+                    └──────┬───────┘
+                           │
+                    Email Evidence
+                           │
+                    ┌──────▼───────┐
+                    │ THREAT ENGINE │
+                    └──────┬───────┘
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+          Sender          URL          Content
+          Analysis      Analysis       Analysis
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                    ┌──────────────┐
+                    │   RISK SCORE │
+                    └──────┬───────┘
+                           │
+                  Investigate
+                           │
+                    ┌──────▼───────┐
+                    │  TRACEVAULT  │
+                    └──────┬───────┘
+                           │
+           ┌───────────────┼───────────────┐
+           ▼               ▼               ▼
+       Forensics       Threat Intel    Geo Intelligence
+           │               │               │
+           └───────────────┼───────────────┘
+                           ▼
+                  📊 Attack Correlation
+                           │
+                           ▼
+                    📄 Forensic Report
 ```
 
----
+## 🛠️ Technology Stack
 
-## 🏗️ System Architecture
+* **Frontend:** React / HTML / CSS / JavaScript
+* **Backend:** Python, FastAPI
+* **AI/ML:** Python-based threat analysis and NLP
+* **Database:** Firebase / Supabase
+* **Email Integration:** Gmail / Google Workspace APIs
+* **Threat Intelligence:** External intelligence APIs
+* **Visualization:** Interactive dashboards and attack graphs
+* **Version Control:** Git & GitHub
 
-```text
-┌──────────────────────────────────────────────┐
-│              Evidence Sources                │
-│                                              │
-│  Endpoint Logs │ Network │ Cloud │ Servers  │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│           Evidence Collection Layer          │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│       Evidence Integrity & Processing        │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│        Correlation & Analysis Engine         │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│              AI Analysis Layer               │
-│                                              │
-│  Pattern Analysis │ Classification │ LLM    │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│         Attack Reconstruction Engine         │
-└──────────────────────┬───────────────────────┘
-                       ↓
-┌──────────────────────────────────────────────┐
-│       Investigation Dashboard & Reports      │
-└──────────────────────────────────────────────┘
-```
+> **Note:** The exact technologies may vary as the prototype evolves.
 
-> **Note:** Update the architecture diagram to match the exact implementation and technologies used in the current version of the project.
+## 🎯 SIH Problem Statement
 
----
+**PS26106 — AI-Powered Email Threat Detection, GeoLocation and Forensic Intelligence Platform**
 
-## 🛠️ Tech Stack
+TRACEVAULT addresses the problem of detecting and investigating sophisticated email threats by combining **AI-based detection, email forensics, threat intelligence, and geolocation intelligence** into a unified platform.
 
-| Category        | Technology           |
-| --------------- | -------------------- |
-| Programming     | Python               |
-| Backend         | FastAPI              |
-| AI / ML         | AI-assisted analysis |
-| Frontend        | React.js             |
-| Database        | ChromaDB             |
-| API             | Gemini API           |
-| Development     | VS Code              |
-| Version Control | Git & GitHub         |
+## 🚀 Future Scope
 
----
-
-## 📂 Project Structure
-
-```text
-Cyber-Black-Box/
-│
-├── backend/
-│   ├── app/
-│   ├── routes/
-│   ├── services/
-│   └── models/
-│
-├── frontend/
-│   ├── components/
-│   ├── pages/
-│   └── assets/
-│
-├── data/
-│   └── sample-evidence/
-│
-├── docs/
-│   └── architecture/
-│
-├── .gitignore
-├── requirements.txt
-└── README.md
-```
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
-
-cd Cyber-Black-Box
-```
-
-### 2. Create a Virtual Environment
-
-```bash
-python -m venv venv
-```
-
-Activate it:
-
-**Windows**
-
-```bash
-venv\Scripts\activate
-```
-
-**Linux / macOS**
-
-```bash
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 4. Configure Environment Variables
-
-Create a `.env` file:
-
-```env
-GEMINI_API_KEY=your_api_key_here
-```
-
-> Never commit `.env` or API keys to GitHub.
-
-### 5. Start the Backend
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The API documentation can then be accessed through the FastAPI documentation interface.
-
----
-
-## 🔬 Investigation Workflow
-
-A typical investigation follows this process:
-
-```text
-Evidence Collection
-        ↓
-Evidence Validation
-        ↓
-Event Normalization
-        ↓
-Event Correlation
-        ↓
-Suspicious Activity Detection
-        ↓
-Timeline Reconstruction
-        ↓
-Attack Analysis
-        ↓
-Root Cause Investigation
-        ↓
-Forensic Report
-```
-
----
-
-## 🎯 Target Users
-
-Cyber Black Box can support:
-
-* 🛡️ Security Operations Centers (SOC)
-* 🔎 Digital Forensic Investigators
-* 👨‍💻 Cybersecurity Teams
-* 🏦 Financial Institutions
-* 🏥 Healthcare Organizations
-* 🏢 Enterprises
-* 🏛️ Government & Security Agencies
-* 🎓 Educational Institutions
-
----
-
-## 🌍 Impact
-
-Cyber Black Box aims to reduce the complexity and manual effort involved in digital forensic investigations.
-
-### Potential Benefits
-
-* ⏱️ Faster incident investigation
-* 🔎 Improved evidence correlation
-* 🧩 Easier attack reconstruction
-* 📊 Better visibility into security incidents
-* 📑 Faster forensic report generation
-* 🛡️ Improved incident response
-* 🎯 Better identification of compromised assets
-
----
-
-## 🔮 Future Enhancements
-
-Future versions can include:
-
-* Real-time endpoint monitoring
-* Automated threat intelligence integration
-* MITRE ATT&CK mapping
-* Advanced anomaly detection
-* Network traffic analysis
-* Cloud forensic analysis
-* Automated IOC extraction
-* Multi-incident investigation management
-* SIEM integration
-* Advanced visualization of attack graphs
-* Continuous evidence collection
-
----
+* Automated mailbox-wide threat monitoring
+* Advanced phishing and BEC detection
+* Threat-intelligence feed integration
+* Automated incident-response workflows
+* Campaign-level threat correlation
+* SIEM/SOC integration
+* Blockchain-based evidence integrity
+* Automated forensic report generation
 
 ## 🔒 Security & Privacy
 
-Cyber Black Box is intended for **authorized cybersecurity investigations only**.
-
-Do not upload confidential, personally identifiable, or production forensic data into an untrusted development environment.
-
-For demonstration purposes, use synthetic or appropriately sanitized security data.
+TRACEVAULT is designed with a **security-first approach**. Email data and investigation evidence should be processed using minimum necessary permissions, secure communication, and appropriate access controls.
 
 ---
 
-## 📊 Project Status
+### 👩‍💻 Project
 
-**Status:** 🚀 Prototype / Working Project
+**TRACEVAULT**
+*Turning suspicious emails into actionable forensic intelligence.*
 
-Cyber Black Box currently demonstrates the core workflow for collecting, analyzing, correlating, and reconstructing cybersecurity evidence.
-
----
-
-## 👩‍💻 Author
-
-**Bhavya Sri**
-
-B.Tech Computer Science Engineering
-
-Interested in:
-
-`Cybersecurity` • `AI/ML` • `Web Development` • `Data Structures & Algorithms`
-
----
-
-## ⭐ Acknowledgements
-
-Built as a cybersecurity-focused project exploring the intersection of:
-
-**Artificial Intelligence + Digital Forensics + Incident Response**
-
----
-
-## 📜 License
-
-This project is intended for educational, research, and authorized cybersecurity use.
-
-Add an appropriate open-source license here if you plan to make the repository publicly reusable.
+**Built for Smart India Hackathon — PS26106**
