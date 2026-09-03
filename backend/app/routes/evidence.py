@@ -9,13 +9,12 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from app.models import Evidence
 from app.ai.analyzer import analyze_log
 from app.ai.embeddings import add_to_vector_store, search_similar
-
 router = APIRouter(prefix="/api/evidence", tags=["evidence"])
 
 EVIDENCE_DB: list[Evidence] = []
 
 UPLOAD_DIR = "uploads"
-ALLOWED_EXTENSIONS = {".log", ".txt", ".csv", ".json"}
+ALLOWED_EXTENSIONS = {".log", ".txt", ".csv", ".json",".eml"}
 
 
 def compute_sha256(data: bytes) -> str:
@@ -117,7 +116,13 @@ def analyze_evidence(evidence_id: str):
 
     with open(file_path, "r", errors="ignore") as f:
         log_content = f.read()
-
+    if evidence.filename.endswith(".eml"):
+        from app.email.parser import parse_eml
+        from app.email.geolocation import extract_ips, geolocate_ip
+        parsed = parse_eml(contents_bytes)  # read file bytes same way upload does
+        ips = extract_ips(parsed["received_chain"])
+        evidence.geo_trace = [geolocate_ip(ip) for ip in ips]
+        log_content = f"Email headers: {parsed}\n\nBody: {parsed['body']}"
     analysis = analyze_log(log_content)
     evidence.ai_analysis = analysis
     evidence.status = "analyzed"

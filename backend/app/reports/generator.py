@@ -18,7 +18,7 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
 
     elements = []
 
-    elements.append(Paragraph("Cyber Black Box - Investigation Report", title_style))
+    elements.append(Paragraph("TraceVault - Investigation Report", title_style))    
     elements.append(Spacer(1, 12))
 
     elements.append(Paragraph("Incident Summary", heading_style))
@@ -62,6 +62,13 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
         elements.append(Spacer(1, 12))
 
         elements.append(Paragraph("Compromised Assets", heading_style))
+        if evidence.geo_trace:
+            elements.append(Paragraph("GeoLocation & Relay Trace", heading_style))
+            geo_rows = [["IP", "Location", "ISP", "Confidence"]] + [
+                [h.ip, f"{h.city}, {h.country}", h.isp, h.confidence] for h in evidence.geo_trace
+            ]
+            elements.append(_build_table(geo_rows, header=True))
+            elements.append(Spacer(1, 12))
         if a.compromised_assets:
             asset_rows = [["Type", "Value", "Severity"]] + [
                 [ast.asset_type, ast.value, ast.severity] for ast in a.compromised_assets

@@ -38,3 +38,23 @@ class Evidence(BaseModel):
     hash_algorithm: str = "SHA-256"
     ai_analysis: AIAnalysis | None = None
     recommendations: Recommendations | None = None
+
+class HeaderAnalysis(BaseModel):
+    spf: str
+    dkim: str
+    dmarc: str
+    from_address: str
+    display_name: str
+    reply_to: str | None = None
+
+class AIAnalysis(BaseModel):
+    # ...existing fields...
+    header_analysis: "HeaderAnalysis | None" = None
+    geo_trace: list["GeoHop"] = []
+
+class GeoHop(BaseModel):
+    ip: str
+    city: str | None
+    country: str | None
+    isp: str | None
+    confidence: str

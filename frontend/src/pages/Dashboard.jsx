@@ -35,22 +35,22 @@ function Dashboard() {
 
   return (
     <div style={{ padding: "2rem", background: "#0d1117", minHeight: "100vh", color: "#c9d1d9" }}>
-      <h1 style={{ color: "#58a6ff", marginBottom: "1.5rem" }}>Cyber Black Box — SOC Dashboard</h1>
+      <h1>TraceVault — Email Threat Intelligence Dashboard</h1>
 
       {loading ? (
         <p style={{ color: "#8b949e" }}>Loading evidence...</p>
       ) : (
         <>
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "2rem" }}>
-            <StatCard label="Total Incidents" value={totalIncidents} color="#58a6ff" />
+            <StatCard label="Emails Analyzed" value={totalIncidents} color="#58a6ff" />
             <StatCard label="Active Alerts" value={activeAlerts} color="#a371f7" />
             <StatCard label="Risk Level" value={riskLevel} color={riskColor} />
-            <StatCard label="Latest Attack" value={latestAttack} color="#39c5cf" />
+            <StatCard label="Latest Threat" value={latestAttack} color="#39c5cf" />
             <StatCard label="Investigation Status" value={totalIncidents > 0 ? "In Progress" : "Idle"} color="#d29922" />
           </div>
 
           <div style={{ background: "#161b22", borderRadius: "10px", padding: "1.5rem" }}>
-            <h3 style={{ color: "#8b949e", marginTop: 0 }}>Evidence Collected Over Time</h3>
+            <h3>Threat Detections Over Time</h3>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />

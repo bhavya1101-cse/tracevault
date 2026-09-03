@@ -23,7 +23,9 @@ ANALYSIS_PROMPT = """You are a cybersecurity analyst. Analyze the following secu
 }}
 
 If no specific assets are clearly identifiable, return an empty array. Do not invent identifiers not present in the log.
-
+"If this is an email (headers present), also assess: sender domain legitimacy, "
+"display-name spoofing, and authentication failure risk. Classify attack_type as "
+"Phishing, Spoofing, BEC, or Malware Attachment where applicable."
 Log excerpt:
 {log_content}
 """

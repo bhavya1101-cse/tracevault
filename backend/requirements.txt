@@ -7,3 +7,4 @@ langchain-community
 chromadb
 google-generativeai
 reportlab
+checkdmarc

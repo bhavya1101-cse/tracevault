@@ -9,11 +9,11 @@ function App() {
   return (
     <BrowserRouter>
       <nav style={{ background: "#161b22", padding: "1rem 2rem", display: "flex", gap: "1.5rem" }}>
-        <Link to="/" style={{ color: "#58a6ff", textDecoration: "none" }}>Dashboard</Link>
-        <Link to="/evidence" style={{ color: "#58a6ff", textDecoration: "none" }}>Evidence Collection</Link>
-        <Link to="/timeline" style={{ color: "#58a6ff", textDecoration: "none" }}>Timeline</Link>
-        <Link to="/network" style={{ color: "#58a6ff", textDecoration: "none" }}>Network Graph</Link>
-        <Link to="/assets" style={{ color: "#58a6ff", textDecoration: "none" }}>Compromised Assets</Link>
+        <Link to="/" style={{ color: "#58a6ff" }}>Dashboard</Link>
+        <Link to="/evidence" style={{ color: "#58a6ff" }}>Email Ingestion</Link>
+        <Link to="/headers" style={{ color: "#58a6ff" }}>Header & Auth Analysis</Link>
+        <Link to="/geo" style={{ color: "#58a6ff" }}>GeoLocation Trace</Link>
+        <Link to="/assets" style={{ color: "#58a6ff" }}>Case Reports</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Dashboard />} />
@@ -21,6 +21,7 @@ function App() {
         <Route path="/timeline" element={<Timeline />} />
         <Route path="/network" element={<NetworkGraph />} />
         <Route path="/assets" element={<CompromisedAssets />} />
+        <Route path="/geo" element={<GeoTrace />} />
       </Routes>
     </BrowserRouter>
   );

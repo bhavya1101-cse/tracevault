@@ -1,0 +1,3 @@
+import GeoTrace from "./pages/GeoTrace";
+// ...
+<Route path="/geo" element={<GeoTrace />} />
