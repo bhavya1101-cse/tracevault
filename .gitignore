@@ -1,21 +1,83 @@
+# =========================
 # Python
-backend/venv/
-__pycache__/
-*.pyc
-.env
+# =========================
+venv/
+.venv/
+env/
+ENV/
 
-# Node
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# =========================
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Backend / Generated Data
+# =========================
+uploads/
+vector_db/
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# Node / Frontend
+# =========================
+node_modules/
 frontend/node_modules/
 frontend/build/
+frontend/dist/
 
-# Data (don't commit logs/uploads/vector db/reports contents)
-logs/*
-uploads/*
-vector_db/*
-reports/*
-!logs/.gitkeep
-!uploads/.gitkeep
-!vector_db/.gitkeep
-!reports/.gitkeep
-.vercel
-.env*
+# =========================
+# Vercel
+# =========================
+.vercel/
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Python Tools
+# =========================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Coverage
+# =========================
+.coverage
+.coverage.*
+htmlcov/
+
+# =========================
+# Temporary Files
+# =========================
+*.tmp
+*.temp
+*.bak
