@@ -5,13 +5,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes import evidence
 
-app = FastAPI(title="Cyber Black Box API")
+app = FastAPI(title="TraceVault")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://cyber-black-box.vercel.app",
+        "https://tracevault.vercel.app",   # your new frontend URL
     ],
     allow_credentials=True,
     allow_methods=["*"],
