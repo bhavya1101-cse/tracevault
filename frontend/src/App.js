@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { theme, styles } from "./theme";
+import { styles } from "./theme";
 import Dashboard from "./pages/Dashboard";
 import EvidenceTable from "./components/EvidenceTable";
 import Timeline from "./pages/Timeline";

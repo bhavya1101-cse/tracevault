@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { theme, styles, confidenceColor } from "../theme";
+import { theme, styles } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
