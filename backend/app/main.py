@@ -2,14 +2,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from app.routes import evidence
 
 app = FastAPI(title="TraceVault")
 
+from fastapi.middleware.cors import CORSMiddleware
+import re
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://tracevault.vercel.app"],
+    allow_origin_regex=r"https://tracevault.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
