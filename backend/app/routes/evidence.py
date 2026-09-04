@@ -123,11 +123,9 @@ async def upload_evidence(file: UploadFile = File(...), source: str = "manual_up
 @router.post("/extension-preview")
 def extension_preview(payload: ExtensionEmailRequest):
     """
-    Receives only the email currently selected by the user
-    through the TraceMail browser extension.
-
-    This endpoint is for quick analysis.
-    Full forensic header analysis is handled separately.
+    Receives the email currently selected by the user
+    through the TraceMail browser extension and runs
+    the existing TraceVault AI analysis engine.
     """
 
     if not any([
@@ -141,15 +139,35 @@ def extension_preview(payload: ExtensionEmailRequest):
             detail="No email content was provided."
         )
 
-    return {
-        "success": True,
-        "message": "TraceMail email received successfully.",
-        "email": {
-            "subject": payload.subject,
-            "sender": payload.sender,
-            "sender_email": payload.sender_email
+    # Build a safe text representation for the existing analyzer
+    email_content = f"""
+Subject: {payload.subject}
+From: {payload.sender} <{payload.sender_email}>
+
+Email Body:
+{payload.body}
+"""
+
+    try:
+        # Reuse the existing TraceVault analysis engine
+        analysis = analyze_log(email_content)
+
+        return {
+            "success": True,
+            "message": "TraceMail email analyzed successfully.",
+            "email": {
+                "subject": payload.subject,
+                "sender": payload.sender,
+                "sender_email": payload.sender_email
+            },
+            "analysis": analysis.model_dump()
         }
-    }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Email analysis failed: {str(exc)}"
+        )
 
 @router.post("/paste-headers", response_model=Evidence)
 async def paste_headers(payload: PasteHeadersRequest):

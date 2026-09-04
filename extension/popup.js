@@ -205,7 +205,35 @@ if (!response.ok) {
 
 const result =
   await response.json();
+const analysis = result.analysis;
 
+if (analysis) {
+  const analysisResult = document.getElementById("analysisResult");
+  const riskBadge = document.getElementById("riskBadge");
+  const threatType = document.getElementById("threatType");
+  const severity = document.getElementById("severity");
+  const confidence = document.getElementById("confidence");
+  const threatSummary = document.getElementById("threatSummary");
+
+  analysisResult.classList.remove("hidden");
+
+  threatType.textContent = analysis.attack_type || "Unknown";
+  severity.textContent = analysis.severity || "Unknown";
+
+  const score = Number(analysis.confidence_score);
+
+  confidence.textContent = Number.isFinite(score)
+    ? `${Math.round(score * 100)}%`
+    : "N/A";
+
+  threatSummary.textContent =
+    analysis.threat_summary ||
+    analysis.root_cause_explanation ||
+    "No threat summary available.";
+
+  riskBadge.textContent =
+    (analysis.severity || "UNKNOWN").toUpperCase();
+}
 await chrome.storage.local.set({
   selectedEmail: email,
   traceVaultResponse: result

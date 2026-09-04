@@ -176,3 +176,50 @@ footer {
 
   color: #888888;
 }
+.analysis-result {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.hidden {
+  display: none;
+}
+
+.risk-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #111;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid #e5e5e5;
+  font-size: 13px;
+}
+
+.result-row span {
+  color: #666;
+}
+
+.result-row strong {
+  color: #111;
+  text-align: right;
+}
+
+.result-summary {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+}
