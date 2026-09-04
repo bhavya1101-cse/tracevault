@@ -9,11 +9,7 @@ app = FastAPI(title="TraceVault")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://tracevault.vercel.app",   # update after your Vercel deploy if the URL differs
-    ],
-    allow_credentials=True,
+    allow_origins=["https://tracevault.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
