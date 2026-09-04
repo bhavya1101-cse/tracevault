@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
+import { styles, severityColor } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
-
-const severityColors = {
-  Low: "#3fb950",
-  Medium: "#d29922",
-  High: "#f85149",
-  Critical: "#da3633",
-};
 
 function CompromisedAssets() {
   const [assets, setAssets] = useState([]);
@@ -34,28 +28,27 @@ function CompromisedAssets() {
   }, {});
 
   return (
-    <div style={{ padding: "2rem", background: "#0d1117", minHeight: "100vh", color: "#c9d1d9" }}>
-      <h1 style={{ color: "#58a6ff", marginBottom: "1.5rem" }}>Compromised Assets</h1>
+    <div style={styles.page}>
+      <h1 style={styles.h1}>Compromised Assets</h1>
 
       {assets.length === 0 ? (
-        <p style={{ color: "#8b949e" }}>No compromised assets identified yet — analyze some evidence first.</p>
+        <p style={styles.emptyState}>No compromised assets identified yet — analyze some evidence first.</p>
       ) : (
         Object.entries(grouped).map(([type, items]) => (
           <div key={type} style={{ marginBottom: "1.5rem" }}>
-            <h3 style={{ color: "#8b949e" }}>{type}s</h3>
+            <h3 style={styles.h2}>{type}s</h3>
             <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
               {items.map((a, i) => (
                 <div
                   key={i}
                   style={{
-                    background: "#161b22",
-                    border: `1px solid ${severityColors[a.severity] || "#8b949e"}`,
-                    borderRadius: "8px",
+                    ...styles.card,
+                    borderColor: severityColor(a.severity),
                     padding: "0.75rem 1rem",
                   }}
                 >
                   <div style={{ fontWeight: "bold" }}>{a.value}</div>
-                  <div style={{ fontSize: "0.75rem", color: severityColors[a.severity] || "#8b949e" }}>
+                  <div style={{ fontSize: styles.mutedText.fontSize, color: severityColor(a.severity) }}>
                     {a.severity} — from {a.fromFile}
                   </div>
                 </div>

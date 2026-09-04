@@ -18,7 +18,7 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
 
     elements = []
 
-    elements.append(Paragraph("TraceVault - Investigation Report", title_style))    
+    elements.append(Paragraph("TraceVault - Investigation Report", title_style))
     elements.append(Spacer(1, 12))
 
     elements.append(Paragraph("Incident Summary", heading_style))
@@ -61,14 +61,34 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
         elements.append(Paragraph(f"<b>Explanation:</b> {a.root_cause_explanation}", body_style))
         elements.append(Spacer(1, 12))
 
-        elements.append(Paragraph("Compromised Assets", heading_style))
-        if evidence.geo_trace:
+        if a.header_analysis:
+            h = a.header_analysis
+            elements.append(Paragraph("Header & Authentication Analysis", heading_style))
+            elements.append(_build_table([
+                ["SPF", h.spf],
+                ["DKIM", h.dkim],
+                ["DMARC", h.dmarc],
+                ["From Address", h.from_address],
+                ["Display Name", h.display_name],
+                ["Reply-To", h.reply_to or "N/A"],
+            ]))
+            elements.append(Spacer(1, 12))
+
+        if a.geo_trace:
             elements.append(Paragraph("GeoLocation & Relay Trace", heading_style))
             geo_rows = [["IP", "Location", "ISP", "Confidence"]] + [
-                [h.ip, f"{h.city}, {h.country}", h.isp, h.confidence] for h in evidence.geo_trace
+                [
+                    h.ip,
+                    f"{h.city or 'Unknown'}, {h.country or 'Unknown'}",
+                    h.isp or "Unknown",
+                    h.confidence,
+                ]
+                for h in a.geo_trace
             ]
             elements.append(_build_table(geo_rows, header=True))
             elements.append(Spacer(1, 12))
+
+        elements.append(Paragraph("Compromised Assets", heading_style))
         if a.compromised_assets:
             asset_rows = [["Type", "Value", "Severity"]] + [
                 [ast.asset_type, ast.value, ast.severity] for ast in a.compromised_assets

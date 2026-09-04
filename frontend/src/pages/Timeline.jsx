@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import TimelineItem from "../components/TimelineItem";
+import { styles } from "../theme";
 
 function Timeline() {
   const [evidence, setEvidence] = useState([]);
@@ -17,10 +18,10 @@ function Timeline() {
   }, []);
 
   return (
-    <div style={{ padding: "2rem", background: "#0d1117", minHeight: "100vh", color: "#c9d1d9" }}>
-      <h1 style={{ color: "#58a6ff", marginBottom: "1.5rem" }}>Attack Timeline Reconstruction</h1>
+    <div style={styles.page}>
+      <h1 style={styles.h1}>Attack Timeline Reconstruction</h1>
       {evidence.length === 0 ? (
-        <p style={{ color: "#8b949e" }}>No evidence collected yet.</p>
+        <p style={styles.emptyState}>No evidence collected yet.</p>
       ) : (
         evidence.map((e, i) => <TimelineItem key={e.id} evidence={e} index={i} />)
       )}

@@ -1,20 +1,18 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import ReactFlow, { Background, Controls, applyNodeChanges, applyEdgeChanges } from "reactflow";
 import "reactflow/dist/style.css";
+import { theme, styles, confidenceColor } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
-const confidenceColor = (level) =>
-  level === "High" ? "#3fb950" : level === "Medium" ? "#d29922" : "#f85149";
-
 function hopNodeStyle(color) {
   return {
-    background: "#161b22",
-    color: "#c9d1d9",
+    background: theme.colors.surface,
+    color: theme.colors.textPrimary,
     border: `2px solid ${color}`,
-    borderRadius: "8px",
+    borderRadius: theme.radius.sm,
     padding: "10px",
-    fontSize: "0.8rem",
+    fontSize: theme.font.sizeSmall,
     width: 200,
   };
 }
@@ -29,7 +27,9 @@ function GeoTrace() {
     fetch(`${API_URL}/api/evidence`)
       .then((res) => res.json())
       .then((data) => {
-        const withGeo = data.filter((e) => e.geo_trace && e.geo_trace.length > 0);
+        const withGeo = data.filter(
+          (e) => e.ai_analysis?.geo_trace && e.ai_analysis.geo_trace.length > 0
+        );
         setEvidence(withGeo);
         if (withGeo.length > 0) setSelectedId(withGeo[withGeo.length - 1].id);
       })
@@ -47,7 +47,7 @@ function GeoTrace() {
       setEdges([]);
       return;
     }
-    const hops = selected.geo_trace;
+    const hops = selected.ai_analysis.geo_trace;
     const dynamicNodes = hops.map((h, i) => ({
       id: `hop-${i}`,
       position: { x: i * 260, y: 0 },
@@ -61,7 +61,7 @@ function GeoTrace() {
       source: `hop-${i}`,
       target: `hop-${i + 1}`,
       animated: true,
-      style: { stroke: "#58a6ff" },
+      style: { stroke: theme.colors.primary },
     }));
     setNodes(dynamicNodes);
     setEdges(dynamicEdges);
@@ -77,15 +77,15 @@ function GeoTrace() {
   );
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh", color: "#c9d1d9", padding: "2rem" }}>
-      <h1 style={{ color: "#58a6ff" }}>GeoLocation Trace</h1>
-      <p style={{ color: "#8b949e" }}>
+    <div style={styles.page}>
+      <h1 style={styles.h1}>GeoLocation Trace</h1>
+      <p style={styles.subtitle}>
         Relay path reconstructed from email header hops. Confidence reflects reliability of the
         IP-registry signal, not certainty of attacker identity or physical location.
       </p>
 
       {evidence.length === 0 ? (
-        <p style={{ color: "#8b949e" }}>
+        <p style={styles.emptyState}>
           No analyzed emails with a geo trace yet. Upload and analyze a .eml file first.
         </p>
       ) : (
@@ -93,14 +93,7 @@ function GeoTrace() {
           <select
             value={selectedId || ""}
             onChange={(e) => setSelectedId(e.target.value)}
-            style={{
-              background: "#161b22",
-              color: "#c9d1d9",
-              border: "1px solid #30363d",
-              borderRadius: "6px",
-              padding: "0.5rem 0.75rem",
-              marginBottom: "1.5rem",
-            }}
+            style={{ ...styles.select, marginBottom: "1.5rem" }}
           >
             {evidence.map((e) => (
               <option key={e.id} value={e.id}>
@@ -109,7 +102,15 @@ function GeoTrace() {
             ))}
           </select>
 
-          <div style={{ height: "320px", background: "#161b22", borderRadius: "10px", marginBottom: "1.5rem" }}>
+          <div
+            style={{
+              height: "320px",
+              background: theme.colors.surface,
+              borderRadius: theme.radius.md,
+              border: `1px solid ${theme.colors.border}`,
+              marginBottom: "1.5rem",
+            }}
+          >
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -117,33 +118,33 @@ function GeoTrace() {
               onEdgesChange={onEdgesChange}
               fitView
             >
-              <Background color="#30363d" />
+              <Background color={theme.colors.border} />
               <Controls />
             </ReactFlow>
           </div>
 
-          <div style={{ background: "#161b22", borderRadius: "10px", padding: "1.25rem" }}>
-            <h3 style={{ color: "#8b949e", marginTop: 0 }}>Hop Details</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+          <div style={styles.card}>
+            <h3 style={{ ...styles.h2, marginTop: 0 }}>Hop Details</h3>
+            <table style={styles.table}>
               <thead>
-                <tr style={{ textAlign: "left", color: "#8b949e", borderBottom: "1px solid #30363d" }}>
-                  <th style={{ padding: "0.5rem" }}>Hop</th>
-                  <th style={{ padding: "0.5rem" }}>IP Address</th>
-                  <th style={{ padding: "0.5rem" }}>Location</th>
-                  <th style={{ padding: "0.5rem" }}>ISP</th>
-                  <th style={{ padding: "0.5rem" }}>Confidence</th>
+                <tr>
+                  <th style={styles.th}>Hop</th>
+                  <th style={styles.th}>IP Address</th>
+                  <th style={styles.th}>Location</th>
+                  <th style={styles.th}>ISP</th>
+                  <th style={styles.th}>Confidence</th>
                 </tr>
               </thead>
               <tbody>
-                {selected?.geo_trace.map((h, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #21262d" }}>
-                    <td style={{ padding: "0.5rem" }}>{i + 1}</td>
-                    <td style={{ padding: "0.5rem" }}>{h.ip}</td>
-                    <td style={{ padding: "0.5rem" }}>
+                {selected?.ai_analysis.geo_trace.map((h, i) => (
+                  <tr key={i}>
+                    <td style={styles.td}>{i + 1}</td>
+                    <td style={styles.td}>{h.ip}</td>
+                    <td style={styles.td}>
                       {h.city || "Unknown"}, {h.country || "Unknown"}
                     </td>
-                    <td style={{ padding: "0.5rem" }}>{h.isp || "Unknown"}</td>
-                    <td style={{ padding: "0.5rem", color: confidenceColor(h.confidence), fontWeight: "bold" }}>
+                    <td style={styles.td}>{h.isp || "Unknown"}</td>
+                    <td style={{ ...styles.td, color: confidenceColor(h.confidence), fontWeight: "bold" }}>
                       {h.confidence}
                     </td>
                   </tr>

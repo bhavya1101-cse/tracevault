@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import StatCard from "../components/StatCard";
+import { theme, styles } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
@@ -31,33 +32,46 @@ function Dashboard() {
     uploads: i + 1,
   }));
 
-  const riskColor = riskLevel === "High" ? "#f85149" : riskLevel === "Medium" ? "#d29922" : "#3fb950";
+  const riskColor =
+    riskLevel === "High" ? theme.colors.severity.High
+    : riskLevel === "Medium" ? theme.colors.severity.Medium
+    : theme.colors.severity.Low;
 
   return (
-    <div style={{ padding: "2rem", background: "#0d1117", minHeight: "100vh", color: "#c9d1d9" }}>
-      <h1>TraceVault — Email Threat Intelligence Dashboard</h1>
+    <div style={styles.page}>
+      <h1 style={styles.h1}>TraceVault — Email Threat Intelligence Dashboard</h1>
 
       {loading ? (
-        <p style={{ color: "#8b949e" }}>Loading evidence...</p>
+        <p style={styles.emptyState}>Loading evidence...</p>
       ) : (
         <>
-          <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "2rem" }}>
-            <StatCard label="Emails Analyzed" value={totalIncidents} color="#58a6ff" />
-            <StatCard label="Active Alerts" value={activeAlerts} color="#a371f7" />
+          <div style={styles.cardGrid}>
+            <StatCard label="Emails Analyzed" value={totalIncidents} color={theme.colors.primary} />
+            <StatCard label="Active Alerts" value={activeAlerts} color={theme.colors.accent} />
             <StatCard label="Risk Level" value={riskLevel} color={riskColor} />
-            <StatCard label="Latest Threat" value={latestAttack} color="#39c5cf" />
-            <StatCard label="Investigation Status" value={totalIncidents > 0 ? "In Progress" : "Idle"} color="#d29922" />
+            <StatCard label="Latest Threat" value={latestAttack} color={theme.colors.status.info} />
+            <StatCard
+              label="Investigation Status"
+              value={totalIncidents > 0 ? "In Progress" : "Idle"}
+              color={theme.colors.severity.Medium}
+            />
           </div>
 
-          <div style={{ background: "#161b22", borderRadius: "10px", padding: "1.5rem" }}>
-            <h3>Threat Detections Over Time</h3>
+          <div style={styles.card}>
+            <h3 style={styles.h2}>Threat Detections Over Time</h3>
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#30363d" />
-                <XAxis dataKey="name" stroke="#8b949e" />
-                <YAxis stroke="#8b949e" />
-                <Tooltip contentStyle={{ background: "#161b22", border: "1px solid #30363d" }} />
-                <Line type="monotone" dataKey="uploads" stroke="#58a6ff" strokeWidth={2} />
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.border} />
+                <XAxis dataKey="name" stroke={theme.colors.textMuted} />
+                <YAxis stroke={theme.colors.textMuted} />
+                <Tooltip
+                  contentStyle={{
+                    background: theme.colors.surface,
+                    border: `1px solid ${theme.colors.border}`,
+                    borderRadius: theme.radius.sm,
+                  }}
+                />
+                <Line type="monotone" dataKey="uploads" stroke={theme.colors.primary} strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </div>

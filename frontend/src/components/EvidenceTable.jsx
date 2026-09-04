@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { theme, styles, severityColor } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
@@ -11,12 +12,9 @@ function EvidenceTable() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
 
-  const severityColors = {
-    Low: "#3fb950",
-    Medium: "#d29922",
-    High: "#f85149",
-    Critical: "#da3633",
-  };
+  const [inputMode, setInputMode] = useState("file"); // "file" | "paste"
+  const [headersText, setHeadersText] = useState("");
+  const [pasting, setPasting] = useState(false);
 
   const fetchEvidence = () => {
     fetch(`${API_URL}/api/evidence`)
@@ -52,6 +50,31 @@ function EvidenceTable() {
       alert("Upload failed: backend unreachable");
     }
     setUploading(false);
+  };
+
+  const handlePasteAnalyze = async () => {
+    if (!headersText.trim()) return;
+    setPasting(true);
+    try {
+      const res = await fetch(`${API_URL}/api/evidence/paste-headers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          headers_text: headersText,
+          filename: "pasted_headers.eml",
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Analysis failed: ${err.detail}`);
+      } else {
+        fetchEvidence();
+        setHeadersText("");
+      }
+    } catch (e) {
+      alert("Analysis failed: backend unreachable");
+    }
+    setPasting(false);
   };
 
   const handleVerify = async (id) => {
@@ -116,16 +139,66 @@ function EvidenceTable() {
 
   const displayedEvidence = searchResults ?? evidence;
 
+  const toggleBtnStyle = (active) => ({
+    background: active ? theme.colors.primary : theme.colors.surfaceAlt,
+    color: active ? "#ffffff" : theme.colors.textPrimary,
+    border: `1px solid ${active ? theme.colors.primary : theme.colors.border}`,
+    borderRadius: "6px",
+    padding: "0.4rem 1rem",
+    marginRight: "0.5rem",
+    cursor: "pointer",
+  });
+
   return (
-    <div style={{ padding: "2rem", color: "#c9d1d9", background: "#0d1117", minHeight: "100vh" }}>
-      <h2 style={{ color: "#58a6ff" }}>Evidence Collection</h2>
+    <div style={styles.page}>
+      <h2 style={styles.h1}>Evidence Collection</h2>
 
       <div style={{ marginBottom: "1rem" }}>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={handleUpload} disabled={uploading || !file} style={{ marginLeft: "1rem" }}>
-          {uploading ? "Uploading..." : "Upload"}
+        <button style={toggleBtnStyle(inputMode === "file")} onClick={() => setInputMode("file")}>
+          Upload File
+        </button>
+        <button style={toggleBtnStyle(inputMode === "paste")} onClick={() => setInputMode("paste")}>
+          Paste Headers
         </button>
       </div>
+
+      {inputMode === "file" ? (
+        <div style={{ ...styles.card, marginBottom: "1.5rem", maxWidth: "500px" }}>
+          <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+          <button onClick={handleUpload} disabled={uploading || !file} style={{ marginLeft: "1rem" }}>
+            {uploading ? "Uploading..." : "Upload"}
+          </button>
+        </div>
+      ) : (
+        <div style={{ ...styles.card, marginBottom: "1.5rem", maxWidth: "600px" }}>
+          <div style={styles.cardLabel}>Paste raw email headers below</div>
+          <textarea
+            value={headersText}
+            onChange={(e) => setHeadersText(e.target.value)}
+            placeholder="Paste the email header here..."
+            rows={10}
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              background: theme.colors.surface,
+              color: theme.colors.textPrimary,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: "6px",
+              padding: "0.75rem",
+              fontFamily: "monospace",
+              fontSize: "0.85rem",
+              resize: "vertical",
+            }}
+          />
+          <button
+            onClick={handlePasteAnalyze}
+            disabled={pasting || !headersText.trim()}
+            style={{ marginTop: "0.75rem" }}
+          >
+            {pasting ? "Analyzing..." : "Analyze Headers"}
+          </button>
+        </div>
+      )}
 
       <div style={{ marginBottom: "1rem" }}>
         <input
@@ -133,7 +206,7 @@ function EvidenceTable() {
           placeholder="Semantic search (e.g. brute force login)"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: "300px" }}
+          style={{ ...styles.select, width: "300px" }}
         />
         <button onClick={handleSearch} style={{ marginLeft: "0.5rem" }}>
           Search
@@ -145,46 +218,48 @@ function EvidenceTable() {
         )}
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+      <table style={styles.table}>
         <thead>
-          <tr style={{ borderBottom: "1px solid #30363d" }}>
-            <th style={{ textAlign: "left" }}>Filename</th>
-            <th style={{ textAlign: "left" }}>Source</th>
-            <th style={{ textAlign: "left" }}>Status</th>
-            <th style={{ textAlign: "left" }}>SHA-256 Hash</th>
-            <th style={{ textAlign: "left" }}>Integrity</th>
-            <th style={{ textAlign: "left" }}>AI Analysis</th>
-            <th style={{ textAlign: "left" }}>Compromised Assets</th>
-            <th style={{ textAlign: "left" }}>Report</th>
+          <tr>
+            <th style={styles.th}>Filename</th>
+            <th style={styles.th}>Source</th>
+            <th style={styles.th}>Status</th>
+            <th style={styles.th}>SHA-256 Hash</th>
+            <th style={styles.th}>Integrity</th>
+            <th style={styles.th}>AI Analysis</th>
+            <th style={styles.th}>Compromised Assets</th>
+            <th style={styles.th}>Report</th>
           </tr>
         </thead>
         <tbody>
           {displayedEvidence.map((e) => (
-            <tr key={e.id} style={{ borderBottom: "1px solid #21262d" }}>
-              <td>{e.filename}</td>
-              <td>{e.source}</td>
-              <td>{e.status}</td>
-              <td style={{ fontFamily: "monospace", wordBreak: "break-all" }}>{e.hash_value}</td>
-              <td>
+            <tr key={e.id}>
+              <td style={styles.td}>{e.filename}</td>
+              <td style={styles.td}>{e.source}</td>
+              <td style={styles.td}>{e.status}</td>
+              <td style={{ ...styles.td, fontFamily: "monospace", wordBreak: "break-all" }}>
+                {e.hash_value}
+              </td>
+              <td style={styles.td}>
                 <button onClick={() => handleVerify(e.id)}>Verify</button>
                 {verifyResults[e.id] !== undefined && (
                   <span
                     style={{
                       marginLeft: "0.5rem",
-                      color: verifyResults[e.id] ? "#3fb950" : "#f85149",
+                      color: verifyResults[e.id] ? theme.colors.severity.Low : theme.colors.severity.High,
                     }}
                   >
                     {verifyResults[e.id] ? "✔ Verified" : "✘ Tampered"}
                   </span>
                 )}
               </td>
-              <td>
+              <td style={styles.td}>
                 {e.ai_analysis ? (
                   <div>
                     <div>
                       <strong>{e.ai_analysis.attack_type}</strong> ({e.ai_analysis.severity})
                     </div>
-                    <div style={{ fontSize: "0.75rem", color: "#8b949e" }}>
+                    <div style={{ fontSize: "0.75rem", color: theme.colors.textMuted }}>
                       {e.ai_analysis.threat_summary}
                     </div>
                     <div style={{ fontSize: "0.75rem", marginTop: "0.3rem" }}>
@@ -193,12 +268,12 @@ function EvidenceTable() {
                     <div style={{ fontSize: "0.75rem" }}>
                       <strong>Vector:</strong> {e.ai_analysis.attack_vector}
                       {e.ai_analysis.mitre_technique && (
-                        <span style={{ color: "#39c5cf" }}> ({e.ai_analysis.mitre_technique})</span>
+                        <span style={{ color: theme.colors.accent }}> ({e.ai_analysis.mitre_technique})</span>
                       )}
                     </div>
                     <div style={{ marginTop: "0.3rem" }}>
                       {e.recommendations ? (
-                        <div style={{ fontSize: "0.75rem", color: "#3fb950" }}>
+                        <div style={{ fontSize: "0.75rem", color: theme.colors.severity.Low }}>
                           ✔ Recommendations generated ({e.recommendations.containment_steps.length} containment steps)
                         </div>
                       ) : (
@@ -212,7 +287,7 @@ function EvidenceTable() {
                   </button>
                 )}
               </td>
-              <td>
+              <td style={styles.td}>
                 {e.ai_analysis && e.ai_analysis.compromised_assets && e.ai_analysis.compromised_assets.length > 0 ? (
                   <div>
                     {e.ai_analysis.compromised_assets.map((a, i) => (
@@ -220,7 +295,7 @@ function EvidenceTable() {
                         key={i}
                         style={{
                           fontSize: "0.75rem",
-                          color: severityColors[a.severity] || "#8b949e",
+                          color: severityColor(a.severity),
                           marginBottom: "0.15rem",
                         }}
                       >
@@ -229,12 +304,12 @@ function EvidenceTable() {
                     ))}
                   </div>
                 ) : e.ai_analysis ? (
-                  <span style={{ fontSize: "0.75rem", color: "#8b949e" }}>None identified</span>
+                  <span style={{ fontSize: "0.75rem", color: theme.colors.textMuted }}>None identified</span>
                 ) : (
-                  <span style={{ fontSize: "0.75rem", color: "#8b949e" }}>-</span>
+                  <span style={{ fontSize: "0.75rem", color: theme.colors.textMuted }}>-</span>
                 )}
               </td>
-              <td>
+              <td style={styles.td}>
                 <a href={API_URL + "/api/evidence/" + e.id + "/report"} target="_blank" rel="noopener noreferrer">
                   <button>Download Report</button>
                 </a>

@@ -1,32 +1,35 @@
 import { useEffect, useState, useCallback } from "react";
 import ReactFlow, { Background, Controls, applyNodeChanges, applyEdgeChanges } from "reactflow";
 import "reactflow/dist/style.css";
+import { theme, styles, severityColor } from "../theme";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
 function nodeStyle(color) {
   return {
-    background: "#161b22",
-    color: "#c9d1d9",
+    background: theme.colors.surface,
+    color: theme.colors.textPrimary,
     border: `2px solid ${color}`,
-    borderRadius: "8px",
+    borderRadius: theme.radius.sm,
     padding: "10px",
+    fontFamily: theme.font.family,
+    fontSize: theme.font.sizeSmall,
   };
 }
 
 const baseNodes = [
-  { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
-  { id: "laptop", position: { x: 250, y: 0 }, data: { label: "Employee Laptop" }, style: nodeStyle("#d29922") },
-  { id: "fileserver", position: { x: 500, y: 0 }, data: { label: "File Server" }, style: nodeStyle("#d29922") },
-  { id: "database", position: { x: 750, y: 0 }, data: { label: "Database" }, style: nodeStyle("#f85149") },
-  { id: "dc", position: { x: 1000, y: 0 }, data: { label: "Domain Controller" }, style: nodeStyle("#da3633") },
+  { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle(theme.colors.severity.High) },
+  { id: "laptop", position: { x: 250, y: 0 }, data: { label: "Employee Laptop" }, style: nodeStyle(theme.colors.severity.Medium) },
+  { id: "fileserver", position: { x: 500, y: 0 }, data: { label: "File Server" }, style: nodeStyle(theme.colors.severity.Medium) },
+  { id: "database", position: { x: 750, y: 0 }, data: { label: "Database" }, style: nodeStyle(theme.colors.severity.High) },
+  { id: "dc", position: { x: 1000, y: 0 }, data: { label: "Domain Controller" }, style: nodeStyle(theme.colors.severity.Critical) },
 ];
 
 const baseEdges = [
-  { id: "e1", source: "attacker", target: "laptop", animated: true, style: { stroke: "#58a6ff" } },
-  { id: "e2", source: "laptop", target: "fileserver", animated: true, style: { stroke: "#58a6ff" } },
-  { id: "e3", source: "fileserver", target: "database", animated: true, style: { stroke: "#58a6ff" } },
-  { id: "e4", source: "database", target: "dc", animated: true, style: { stroke: "#58a6ff" } },
+  { id: "e1", source: "attacker", target: "laptop", animated: true, style: { stroke: theme.colors.primary } },
+  { id: "e2", source: "laptop", target: "fileserver", animated: true, style: { stroke: theme.colors.primary } },
+  { id: "e3", source: "fileserver", target: "database", animated: true, style: { stroke: theme.colors.primary } },
+  { id: "e4", source: "database", target: "dc", animated: true, style: { stroke: theme.colors.primary } },
 ];
 
 function NetworkGraph() {
@@ -42,15 +45,12 @@ function NetworkGraph() {
         const analyzed = data.filter((e) => e.ai_analysis);
         if (analyzed.length > 0) {
           const dynamicNodes = [
-            { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle("#f85149") },
+            { id: "attacker", position: { x: 0, y: 0 }, data: { label: "Attacker" }, style: nodeStyle(theme.colors.severity.High) },
             ...analyzed.map((e, i) => ({
               id: e.id,
               position: { x: (i + 1) * 250, y: 0 },
               data: { label: `${e.ai_analysis.entry_point} (${e.filename})` },
-              style: nodeStyle(
-                e.ai_analysis.severity === "Critical" ? "#da3633" :
-                e.ai_analysis.severity === "High" ? "#f85149" : "#d29922"
-              ),
+              style: nodeStyle(severityColor(e.ai_analysis.severity)),
             })),
           ];
           const dynamicEdges = analyzed.map((e, i) => ({
@@ -58,7 +58,7 @@ function NetworkGraph() {
             source: i === 0 ? "attacker" : analyzed[i - 1].id,
             target: e.id,
             animated: true,
-            style: { stroke: "#58a6ff" },
+            style: { stroke: theme.colors.primary },
           }));
           setNodes(dynamicNodes);
           setEdges(dynamicEdges);
@@ -77,12 +77,12 @@ function NetworkGraph() {
   );
 
   return (
-    <div style={{ background: "#0d1117", minHeight: "100vh", color: "#c9d1d9", padding: "2rem" }}>
-      <h1 style={{ color: "#58a6ff" }}>Attack Path — Network Graph</h1>
-      <p style={{ color: "#8b949e" }}>
+    <div style={styles.page}>
+      <h1 style={styles.h1}>Attack Path — Network Graph</h1>
+      <p style={styles.subtitle}>
         Attack path based on {evidenceCount} pieces of evidence collected. Drag nodes to rearrange.
       </p>
-      <div style={{ height: "500px", background: "#161b22", borderRadius: "10px" }}>
+      <div style={{ height: "500px", background: theme.colors.surface, borderRadius: theme.radius.md, border: `1px solid ${theme.colors.border}` }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -90,7 +90,7 @@ function NetworkGraph() {
           onEdgesChange={onEdgesChange}
           fitView
         >
-          <Background color="#30363d" />
+          <Background color={theme.colors.border} />
           <Controls />
         </ReactFlow>
       </div>

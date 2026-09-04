@@ -2,6 +2,29 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
+class CompromisedAsset(BaseModel):
+    asset_type: str
+    value: str
+    severity: str
+
+
+class HeaderAnalysis(BaseModel):
+    spf: str
+    dkim: str
+    dmarc: str
+    from_address: str
+    display_name: str
+    reply_to: str | None = None
+
+
+class GeoHop(BaseModel):
+    ip: str
+    city: str | None
+    country: str | None
+    isp: str | None
+    confidence: str
+
+
 class AIAnalysis(BaseModel):
     attack_type: str
     severity: str
@@ -11,13 +34,9 @@ class AIAnalysis(BaseModel):
     attack_vector: str
     mitre_technique: str | None = None
     root_cause_explanation: str
-    compromised_assets: list["CompromisedAsset"] = []
-
-
-class CompromisedAsset(BaseModel):
-    asset_type: str
-    value: str
-    severity: str
+    compromised_assets: list[CompromisedAsset] = []
+    header_analysis: HeaderAnalysis | None = None
+    geo_trace: list[GeoHop] = []
 
 
 class Recommendations(BaseModel):
@@ -38,23 +57,3 @@ class Evidence(BaseModel):
     hash_algorithm: str = "SHA-256"
     ai_analysis: AIAnalysis | None = None
     recommendations: Recommendations | None = None
-
-class HeaderAnalysis(BaseModel):
-    spf: str
-    dkim: str
-    dmarc: str
-    from_address: str
-    display_name: str
-    reply_to: str | None = None
-
-class AIAnalysis(BaseModel):
-    # ...existing fields...
-    header_analysis: "HeaderAnalysis | None" = None
-    geo_trace: list["GeoHop"] = []
-
-class GeoHop(BaseModel):
-    ip: str
-    city: str | None
-    country: str | None
-    isp: str | None
-    confidence: str

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { theme, styles } from "./theme";
 import Dashboard from "./pages/Dashboard";
 import EvidenceTable from "./components/EvidenceTable";
 import Timeline from "./pages/Timeline";
@@ -10,12 +11,12 @@ import HeaderAuth from "./pages/HeaderAuth";
 function App() {
   return (
     <BrowserRouter>
-      <nav style={{ background: "#161b22", padding: "1rem 2rem", display: "flex", gap: "1.5rem" }}>
-        <Link to="/" style={{ color: "#58a6ff" }}>Dashboard</Link>
-        <Link to="/evidence" style={{ color: "#58a6ff" }}>Email Ingestion</Link>
-        <Link to="/headers" style={{ color: "#58a6ff" }}>Header & Auth Analysis</Link>
-        <Link to="/geo" style={{ color: "#58a6ff" }}>GeoLocation Trace</Link>
-        <Link to="/assets" style={{ color: "#58a6ff" }}>Case Reports</Link>
+      <nav style={styles.nav}>
+        <Link to="/" style={styles.navLink}>Dashboard</Link>
+        <Link to="/evidence" style={styles.navLink}>Email Ingestion</Link>
+        <Link to="/headers" style={styles.navLink}>Header & Auth Analysis</Link>
+        <Link to="/geo" style={styles.navLink}>GeoLocation Trace</Link>
+        <Link to="/assets" style={styles.navLink}>Case Reports</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Dashboard />} />
