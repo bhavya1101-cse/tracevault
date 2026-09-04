@@ -123,9 +123,10 @@ async def upload_evidence(file: UploadFile = File(...), source: str = "manual_up
 @router.post("/extension-preview")
 def extension_preview(payload: ExtensionEmailRequest):
     """
-    Receives the email currently selected by the user
-    through the TraceMail browser extension and runs
-    the existing TraceVault AI analysis engine.
+    Receives the email selected by the user in TraceMail,
+    creates a TraceVault evidence/case record, hashes the
+    captured content, runs AI analysis, and returns the
+    investigation ID and analysis result.
     """
 
     if not any([
@@ -139,36 +140,74 @@ def extension_preview(payload: ExtensionEmailRequest):
             detail="No email content was provided."
         )
 
-    # Build a safe text representation for the existing analyzer
-    email_content = f"""
-Subject: {payload.subject}
-From: {payload.sender} <{payload.sender_email}>
-
-Email Body:
-{payload.body}
-"""
-
     try:
-        # Reuse the existing TraceVault analysis engine
-        analysis = analyze_log(email_content)
+        # Build a safe text representation of the selected email
+        email_content = (
+            f"Subject: {payload.subject}\n"
+            f"From: {payload.sender} <{payload.sender_email}>\n"
+            f"Source URL: {payload.source_url}\n\n"
+            f"Email Body:\n{payload.body}"
+        )
+
+        contents = email_content.encode("utf-8")
+
+        # Create unique investigation/evidence ID
+        evidence_id = str(uuid.uuid4())
+
+        # Store the captured email as evidence
+        filename = f"tracemail_{evidence_id}.txt"
+        saved_filename = f"{evidence_id}_{filename}"
+
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+        file_path = os.path.join(UPLOAD_DIR, saved_filename)
+
+        with open(file_path, "wb") as f:
+            f.write(contents)
+
+        # Calculate integrity hash
+        file_hash = compute_sha256(contents)
+
+        # Create TraceVault evidence record
+        evidence = Evidence(
+            id=evidence_id,
+            filename=filename,
+            source="tracemail_extension",
+            event_type="email",
+            status="hashed",
+            uploaded_at=datetime.utcnow(),
+            hash_value=file_hash,
+            hash_algorithm="SHA-256"
+        )
+
+        # Store the case in TraceVault
+        EVIDENCE_DB.append(evidence)
+
+        # Run the existing AI analysis pipeline
+        _run_analysis(evidence, contents)
 
         return {
             "success": True,
-            "message": "TraceMail email analyzed successfully.",
-            "email": {
-                "subject": payload.subject,
-                "sender": payload.sender,
-                "sender_email": payload.sender_email
+            "message": "TraceMail email analyzed and case created successfully.",
+            "case": {
+                "evidence_id": evidence.id,
+                "filename": evidence.filename,
+                "source": evidence.source,
+                "status": evidence.status,
+                "hash": evidence.hash_value
             },
-            "analysis": analysis.model_dump()
+            "analysis": (
+                evidence.ai_analysis.model_dump()
+                if evidence.ai_analysis
+                else None
+            )
         }
 
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Email analysis failed: {str(exc)}"
-        )
-
+            detail=f"TraceMail case creation failed: {str(exc)}"
+)
 @router.post("/paste-headers", response_model=Evidence)
 async def paste_headers(payload: PasteHeadersRequest):
     """Accepts raw pasted email headers (no file upload needed), saves them
