@@ -4,6 +4,8 @@ import EvidenceTable from "./components/EvidenceTable";
 import Timeline from "./pages/Timeline";
 import NetworkGraph from "./pages/NetworkGraph";
 import CompromisedAssets from "./pages/CompromisedAssets";
+import GeoTrace from "./pages/GeoTrace";
+import HeaderAuth from "./pages/HeaderAuth";
 
 function App() {
   return (
@@ -22,6 +24,7 @@ function App() {
         <Route path="/network" element={<NetworkGraph />} />
         <Route path="/assets" element={<CompromisedAssets />} />
         <Route path="/geo" element={<GeoTrace />} />
+        <Route path="/headers" element={<HeaderAuth />} />
       </Routes>
     </BrowserRouter>
   );

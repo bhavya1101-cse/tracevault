@@ -11,7 +11,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://tracevault.vercel.app",   # your new frontend URL
+        "https://tracevault.vercel.app",   # update after your Vercel deploy if the URL differs
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -23,7 +23,7 @@ app.include_router(evidence.router)
 
 @app.get("/")
 def read_root():
-    return {"status": "online", "service": "Cyber Black Box API"}
+    return {"status": "online", "service": "TraceVault API"}
 
 
 @app.get("/api/health")

@@ -6,16 +6,16 @@ from app.models import AIAnalysis, CompromisedAsset, Recommendations
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-3.1-flash-lite")
 
-ANALYSIS_PROMPT = """You are a cybersecurity analyst. Analyze the following security log excerpt and respond ONLY with valid JSON, no other text, in exactly this shape:
+ANALYSIS_PROMPT = """You are a cybersecurity analyst. Analyze the following security log or email excerpt and respond ONLY with valid JSON, no other text, in exactly this shape:
 
 {{
-  "attack_type": "<short label, e.g. Brute Force, Phishing, SQL Injection, Unknown>",
+  "attack_type": "<short label, e.g. Brute Force, Phishing, Spoofing, BEC, Malware Attachment, SQL Injection, Unknown>",
   "severity": "<Low, Medium, High, or Critical>",
   "confidence_score": <number between 0 and 1>,
   "threat_summary": "<2-3 sentence plain-English summary of what happened and why it matters>",
   "entry_point": "<how the attacker likely first gained access>",
   "attack_vector": "<the method/channel used>",
-  "mitre_technique": "<a MITRE ATT&CK technique ID if clearly applicable, e.g. 'T1110', otherwise null>",
+  "mitre_technique": "<a MITRE ATT&CK technique ID if clearly applicable, e.g. 'T1110' or 'T1566.002', otherwise null>",
   "root_cause_explanation": "<2-3 sentences explaining WHY this happened>",
   "compromised_assets": [
     {{"asset_type": "<Server, User, Endpoint, IP Address, or Email>", "value": "<specific identifier from the log>", "severity": "<Low, Medium, High, or Critical>"}}
@@ -23,9 +23,9 @@ ANALYSIS_PROMPT = """You are a cybersecurity analyst. Analyze the following secu
 }}
 
 If no specific assets are clearly identifiable, return an empty array. Do not invent identifiers not present in the log.
-"If this is an email (headers present), also assess: sender domain legitimacy, "
-"display-name spoofing, and authentication failure risk. Classify attack_type as "
-"Phishing, Spoofing, BEC, or Malware Attachment where applicable."
+
+If this is an email (headers present), also assess sender domain legitimacy, display-name spoofing, and authentication failure risk when choosing attack_type.
+
 Log excerpt:
 {log_content}
 """
