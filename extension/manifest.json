@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "TraceMail",
+  "version": "1.0.0",
+  "description": "TraceVault email threat detection and investigation assistant.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+  "https://mail.google.com/*",
+  "https://tracevault-54hy.onrender.com/*"
+],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TraceMail"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}

@@ -22,7 +22,12 @@ ALLOWED_EXTENSIONS = {".log", ".txt", ".csv", ".json", ".eml"}
 class PasteHeadersRequest(BaseModel):
     headers_text: str
     filename: str = "pasted_headers.eml"
-
+class ExtensionEmailRequest(BaseModel):
+    subject: str = ""
+    sender: str = ""
+    sender_email: str = ""
+    body: str = ""
+    source_url: str = ""
 
 def compute_sha256(data: bytes) -> str:
     """Computes the SHA-256 hash of raw bytes and returns it as a hex string."""
@@ -115,7 +120,36 @@ async def upload_evidence(file: UploadFile = File(...), source: str = "manual_up
     )
     EVIDENCE_DB.append(evidence)
     return evidence
+@router.post("/extension-preview")
+def extension_preview(payload: ExtensionEmailRequest):
+    """
+    Receives only the email currently selected by the user
+    through the TraceMail browser extension.
 
+    This endpoint is for quick analysis.
+    Full forensic header analysis is handled separately.
+    """
+
+    if not any([
+        payload.subject.strip(),
+        payload.sender.strip(),
+        payload.sender_email.strip(),
+        payload.body.strip()
+    ]):
+        raise HTTPException(
+            status_code=400,
+            detail="No email content was provided."
+        )
+
+    return {
+        "success": True,
+        "message": "TraceMail email received successfully.",
+        "email": {
+            "subject": payload.subject,
+            "sender": payload.sender,
+            "sender_email": payload.sender_email
+        }
+    }
 
 @router.post("/paste-headers", response_model=Evidence)
 async def paste_headers(payload: PasteHeadersRequest):

@@ -1,0 +1,178 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+
+  width: 360px;
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  background: #ffffff;
+  color: #111111;
+}
+
+.container {
+  width: 360px;
+  min-height: 430px;
+
+  background: #ffffff;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 20px;
+
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.logo {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #111111;
+  border-radius: 10px;
+
+  font-size: 21px;
+}
+
+.header h1 {
+  margin: 0;
+
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.header p {
+  margin: 3px 0 0;
+
+  font-size: 12px;
+  color: #666666;
+}
+
+main {
+  padding: 20px;
+}
+
+.intro h2 {
+  margin: 0 0 8px;
+
+  font-size: 18px;
+}
+
+.intro p {
+  margin: 0;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #555555;
+}
+
+.privacy-box {
+  display: flex;
+
+  gap: 12px;
+
+  margin: 20px 0;
+
+  padding: 14px;
+
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+
+  background: #fafafa;
+}
+
+.privacy-icon {
+  font-size: 20px;
+}
+
+.privacy-box strong {
+  font-size: 13px;
+}
+
+.privacy-box p {
+  margin: 5px 0 0;
+
+  font-size: 11px;
+  line-height: 1.4;
+
+  color: #666666;
+}
+
+button {
+  width: 100%;
+
+  padding: 12px;
+
+  border-radius: 8px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.primary-btn {
+  border: none;
+
+  background: #111111;
+  color: #ffffff;
+}
+
+.primary-btn:hover {
+  background: #333333;
+}
+
+.secondary-btn {
+  margin-top: 10px;
+
+  border: 1px solid #cccccc;
+
+  background: #ffffff;
+  color: #111111;
+}
+
+.secondary-btn:hover {
+  background: #f5f5f5;
+}
+
+.status {
+  min-height: 20px;
+
+  margin-top: 14px;
+
+  text-align: center;
+
+  font-size: 12px;
+
+  color: #555555;
+}
+
+footer {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 15px;
+
+  border-top: 1px solid #eeeeee;
+
+  font-size: 10px;
+
+  color: #888888;
+}
