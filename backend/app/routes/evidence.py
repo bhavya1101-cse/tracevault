@@ -208,6 +208,63 @@ def extension_preview(payload: ExtensionEmailRequest):
             status_code=500,
             detail=f"TraceMail case creation failed: {str(exc)}"
 )
+class CaseHeadersRequest(BaseModel):
+    headers_text: str
+
+
+@router.post("/{evidence_id}/headers")
+def add_headers_to_case(
+    evidence_id: str,
+    payload: CaseHeadersRequest
+):
+    """
+    Adds raw email headers to an existing TraceVault case
+    and runs the existing forensic header analysis pipeline.
+    """
+
+    evidence = next(
+        (item for item in EVIDENCE_DB if item.id == evidence_id),
+        None
+    )
+
+    if evidence is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Investigation case not found."
+        )
+
+    if not payload.headers_text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="No email headers were provided."
+        )
+
+    try:
+        raw_bytes = payload.headers_text.encode("utf-8")
+
+        # Run the existing analysis pipeline against the case
+        _run_analysis(evidence, raw_bytes)
+
+        return {
+            "success": True,
+            "message": "Email headers added and case re-analyzed successfully.",
+            "case": {
+                "evidence_id": evidence.id,
+                "status": evidence.status,
+                "hash": evidence.hash_value
+            },
+            "analysis": (
+                evidence.ai_analysis.model_dump()
+                if evidence.ai_analysis
+                else None
+            )
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Header analysis failed: {str(exc)}"
+        )
 @router.post("/paste-headers", response_model=Evidence)
 async def paste_headers(payload: PasteHeadersRequest):
     """Accepts raw pasted email headers (no file upload needed), saves them

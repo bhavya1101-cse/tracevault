@@ -235,12 +235,19 @@ if (analysis) {
   riskBadge.textContent =
     (analysis.severity || "UNKNOWN").toUpperCase();
 }
+const caseId = result.case?.evidence_id || null;
+
 await chrome.storage.local.set({
   selectedEmail: email,
-  traceVaultResponse: result
+  traceVaultResponse: result,
+  caseId: caseId
 });
 
-statusEl.textContent = "TraceVault connected ✓ Email received successfully.";
+if (caseId) {
+  statusEl.textContent = "Case created ✓ Investigation ID: " + caseId;
+} else {
+  statusEl.textContent = "TraceVault connected ✓";
+}
 console.log(
   "TraceVault response:",
   result
