@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import ReactFlow, { Background, Controls, applyNodeChanges, applyEdgeChanges } from "reactflow";
 import "reactflow/dist/style.css";
 import { theme, styles, severityColor } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function nodeStyle(color) {
   return {
@@ -38,7 +37,7 @@ function NetworkGraph() {
   const [evidenceCount, setEvidenceCount] = useState(0);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         setEvidenceCount(data.length);
@@ -64,7 +63,7 @@ function NetworkGraph() {
           setEdges(dynamicEdges);
         }
       })
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   }, []);
 
   const onNodesChange = useCallback(

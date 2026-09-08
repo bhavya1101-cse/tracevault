@@ -49,13 +49,26 @@ Root Cause: {root_cause_explanation}
 """
 
 
+def _extract_json_object(text: str) -> str:
+    """Locates the first '{' and last '}' in the response and takes
+    everything between them. Replaces the old .strip("```").strip("json")
+    approach, which strips individual characters from either end (not the
+    literal substrings) - a response that happened to start or end with
+    the letters j/s/o/n could get silently corrupted."""
+    text = text.strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        return text  # let json.loads raise a clear error below
+    return text[start:end + 1]
+
+
 def analyze_log(log_content: str) -> AIAnalysis:
     prompt = ANALYSIS_PROMPT.format(log_content=log_content[:3000])
 
     try:
         response = model.generate_content(prompt)
-        raw_response = response.text
-        cleaned = raw_response.strip().strip("```").strip("json").strip()
+        cleaned = _extract_json_object(response.text)
         data = json.loads(cleaned)
 
         assets = [
@@ -104,8 +117,7 @@ def generate_recommendations(analysis: AIAnalysis) -> Recommendations:
 
     try:
         response = model.generate_content(prompt)
-        raw_response = response.text
-        cleaned = raw_response.strip().strip("```").strip("json").strip()
+        cleaned = _extract_json_object(response.text)
         data = json.loads(cleaned)
         return Recommendations(
             containment_steps=data.get("containment_steps", []),

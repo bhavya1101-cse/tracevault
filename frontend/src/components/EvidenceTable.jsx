@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { theme, styles, severityColor } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function EvidenceTable() {
   const [evidence, setEvidence] = useState([]);
@@ -9,6 +8,7 @@ function EvidenceTable() {
   const [uploading, setUploading] = useState(false);
   const [verifyResults, setVerifyResults] = useState({});
   const [analyzing, setAnalyzing] = useState({});
+  const [downloading, setDownloading] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState(null);
 
@@ -16,11 +16,14 @@ function EvidenceTable() {
   const [headersText, setHeadersText] = useState("");
   const [pasting, setPasting] = useState(false);
 
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkAnalyzing, setBulkAnalyzing] = useState(false);
+
   const fetchEvidence = () => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then(setEvidence)
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   };
 
   useEffect(() => {
@@ -35,19 +38,11 @@ function EvidenceTable() {
     formData.append("source", "manual_upload");
 
     try {
-      const res = await fetch(`${API_URL}/api/evidence/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(`Upload failed: ${err.detail}`);
-      } else {
-        fetchEvidence();
-        setFile(null);
-      }
+      await apiFetch("/api/evidence/upload", { method: "POST", body: formData });
+      fetchEvidence();
+      setFile(null);
     } catch (e) {
-      alert("Upload failed: backend unreachable");
+      alert(`Upload failed: ${e.message}`);
     }
     setUploading(false);
   };
@@ -56,7 +51,7 @@ function EvidenceTable() {
     if (!headersText.trim()) return;
     setPasting(true);
     try {
-      const res = await fetch(`${API_URL}/api/evidence/paste-headers`, {
+      await apiFetch("/api/evidence/paste-headers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,55 +59,41 @@ function EvidenceTable() {
           filename: "pasted_headers.eml",
         }),
       });
-      if (!res.ok) {
-        const err = await res.json();
-        alert(`Analysis failed: ${err.detail}`);
-      } else {
-        fetchEvidence();
-        setHeadersText("");
-      }
+      fetchEvidence();
+      setHeadersText("");
     } catch (e) {
-      alert("Analysis failed: backend unreachable");
+      alert(`Analysis failed: ${e.message}`);
     }
     setPasting(false);
   };
 
   const handleVerify = async (id) => {
-    const res = await fetch(`${API_URL}/api/evidence/${id}/verify`);
-    const data = await res.json();
-    setVerifyResults((prev) => ({ ...prev, [id]: data.verified }));
+    try {
+      const res = await apiFetch(`/api/evidence/${id}/verify`);
+      const data = await res.json();
+      setVerifyResults((prev) => ({ ...prev, [id]: data.verified }));
+    } catch (e) {
+      alert(`Verify failed: ${e.message}`);
+    }
   };
 
   const handleAnalyze = async (id) => {
     setAnalyzing((prev) => ({ ...prev, [id]: true }));
     try {
-      const res = await fetch(`${API_URL}/api/evidence/${id}/analyze`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        fetchEvidence();
-      } else {
-        alert("Analysis failed");
-      }
+      await apiFetch(`/api/evidence/${id}/analyze`, { method: "POST" });
+      fetchEvidence();
     } catch (e) {
-      alert("Analysis failed: backend unreachable");
+      alert(`Analysis failed: ${e.message}`);
     }
     setAnalyzing((prev) => ({ ...prev, [id]: false }));
   };
 
   const handleRecommend = async (id) => {
     try {
-      const res = await fetch(`${API_URL}/api/evidence/${id}/recommend`, {
-        method: "POST",
-      });
-      if (res.ok) {
-        fetchEvidence();
-      } else {
-        const err = await res.json();
-        alert(`Recommendation failed: ${err.detail}`);
-      }
+      await apiFetch(`/api/evidence/${id}/recommend`, { method: "POST" });
+      fetchEvidence();
     } catch (e) {
-      alert("Recommendation failed: backend unreachable");
+      alert(`Recommendation failed: ${e.message}`);
     }
   };
 
@@ -122,19 +103,81 @@ function EvidenceTable() {
       return;
     }
     try {
-      const res = await fetch(
-        `${API_URL}/api/evidence/search?q=${encodeURIComponent(searchQuery)}`
-      );
-      const data = await res.json();
-      setSearchResults(data);
+      const res = await apiFetch(`/api/evidence/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(await res.json());
     } catch (e) {
-      alert("Search failed: backend unreachable");
+      alert(`Search failed: ${e.message}`);
     }
   };
 
   const handleClearSearch = () => {
     setSearchResults(null);
     setSearchQuery("");
+  };
+
+  const handleDownloadReport = async (id, filename) => {
+    setDownloading((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await apiFetch(`/api/evidence/${id}/report`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `report_${filename}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      alert(`Report download failed: ${e.message}`);
+    }
+    setDownloading((prev) => ({ ...prev, [id]: false }));
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allDisplayedSelected =
+    displayedEvidenceIds().length > 0 &&
+    displayedEvidenceIds().every((id) => selectedIds.has(id));
+
+  function displayedEvidenceIds() {
+    return (searchResults ?? evidence).map((e) => e.id);
+  }
+
+  const toggleSelectAll = () => {
+    const ids = displayedEvidenceIds();
+    setSelectedIds((prev) => {
+      const allSelected = ids.length > 0 && ids.every((id) => prev.has(id));
+      return allSelected ? new Set() : new Set(ids);
+    });
+  };
+
+  const handleBulkAnalyze = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkAnalyzing(true);
+    try {
+      const res = await apiFetch("/api/evidence/bulk-analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Array.from(selectedIds)),
+      });
+      const data = await res.json();
+      const failed = data.results.filter((r) => r.status === "error");
+      if (failed.length > 0) {
+        alert(`${failed.length} of ${data.results.length} failed. Check console for details.`);
+        console.error("Bulk analyze failures:", failed);
+      }
+      setSelectedIds(new Set());
+      fetchEvidence();
+    } catch (e) {
+      alert(`Bulk investigate failed: ${e.message}`);
+    }
+    setBulkAnalyzing(false);
   };
 
   const displayedEvidence = searchResults ?? evidence;
@@ -218,9 +261,32 @@ function EvidenceTable() {
         )}
       </div>
 
+      <div style={{ marginBottom: "0.75rem" }}>
+        <button
+          onClick={handleBulkAnalyze}
+          disabled={selectedIds.size === 0 || bulkAnalyzing}
+          style={{
+            background: theme.colors.primary,
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            padding: "0.5rem 1rem",
+            cursor: selectedIds.size === 0 ? "not-allowed" : "pointer",
+            opacity: selectedIds.size === 0 ? 0.5 : 1,
+          }}
+        >
+          {bulkAnalyzing
+            ? "Investigating..."
+            : `Investigate Selected (${selectedIds.size})`}
+        </button>
+      </div>
+
       <table style={styles.table}>
         <thead>
           <tr>
+            <th style={styles.th}>
+              <input type="checkbox" checked={allDisplayedSelected} onChange={toggleSelectAll} />
+            </th>
             <th style={styles.th}>Filename</th>
             <th style={styles.th}>Source</th>
             <th style={styles.th}>Status</th>
@@ -234,6 +300,13 @@ function EvidenceTable() {
         <tbody>
           {displayedEvidence.map((e) => (
             <tr key={e.id}>
+              <td style={styles.td}>
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(e.id)}
+                  onChange={() => toggleSelect(e.id)}
+                />
+              </td>
               <td style={styles.td}>{e.filename}</td>
               <td style={styles.td}>{e.source}</td>
               <td style={styles.td}>{e.status}</td>
@@ -310,9 +383,13 @@ function EvidenceTable() {
                 )}
               </td>
               <td style={styles.td}>
-                <a href={API_URL + "/api/evidence/" + e.id + "/report"} target="_blank" rel="noopener noreferrer">
-                  <button>Download Report</button>
-                </a>
+                {e.status === "analyzed" ? (
+                  <button onClick={() => handleDownloadReport(e.id, e.filename)} disabled={downloading[e.id]}>
+                    {downloading[e.id] ? "Downloading..." : "Download Report"}
+                  </button>
+                ) : (
+                  <span style={{ fontSize: "0.75rem", color: theme.colors.textMuted }}>—</span>
+                )}
               </td>
             </tr>
           ))}

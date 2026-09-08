@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import ReactFlow, { Background, Controls, applyNodeChanges, applyEdgeChanges } from "reactflow";
 import "reactflow/dist/style.css";
 import { theme, styles, confidenceColor } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function hopNodeStyle(color) {
   return {
@@ -24,7 +23,7 @@ function GeoTrace() {
   const [edges, setEdges] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         const withGeo = data.filter(
@@ -33,7 +32,7 @@ function GeoTrace() {
         setEvidence(withGeo);
         if (withGeo.length > 0) setSelectedId(withGeo[withGeo.length - 1].id);
       })
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   }, []);
 
   const selected = useMemo(

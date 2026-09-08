@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { theme, styles } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function resultColor(result) {
   if (result === "Pass") return theme.colors.severity.Low;
@@ -14,14 +13,14 @@ function HeaderAuth() {
   const [selectedId, setSelectedId] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         const withHeaders = data.filter((e) => e.ai_analysis?.header_analysis);
         setEvidence(withHeaders);
         if (withHeaders.length > 0) setSelectedId(withHeaders[withHeaders.length - 1].id);
       })
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   }, []);
 
   const selected = useMemo(

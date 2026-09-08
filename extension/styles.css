@@ -176,6 +176,7 @@ footer {
 
   color: #888888;
 }
+
 .analysis-result {
   margin-top: 16px;
   padding: 16px;
@@ -222,4 +223,61 @@ footer {
   font-size: 13px;
   line-height: 1.5;
   color: #333;
+}
+
+.history-section {
+  margin-top: 20px;
+}
+
+.history-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 12px;
+}
+
+.history-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.history-subject {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #333;
+}
+
+.history-severity {
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.history-empty {
+  font-size: 12px;
+  color: #999;
+  padding: 8px 0;
 }

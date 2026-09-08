@@ -19,10 +19,20 @@ class HeaderAnalysis(BaseModel):
 
 class GeoHop(BaseModel):
     ip: str
-    city: str | None
-    country: str | None
-    isp: str | None
+    city: str | None = None
+    country: str | None = None
+    isp: str | None = None
     confidence: str
+
+
+class URLReputation(BaseModel):
+    url: str
+    checked: bool
+    reason: str | None = None
+    malicious: int = 0
+    suspicious: int = 0
+    harmless: int = 0
+    verdict: str
 
 
 class AIAnalysis(BaseModel):
@@ -37,6 +47,7 @@ class AIAnalysis(BaseModel):
     compromised_assets: list[CompromisedAsset] = []
     header_analysis: HeaderAnalysis | None = None
     geo_trace: list[GeoHop] = []
+    url_reputations: list[URLReputation] = []
 
 
 class Recommendations(BaseModel):
@@ -57,3 +68,6 @@ class Evidence(BaseModel):
     hash_algorithm: str = "SHA-256"
     ai_analysis: AIAnalysis | None = None
     recommendations: Recommendations | None = None
+    # Owner isolation - which anonymous browser user uploaded this.
+    # Never returned to any request that doesn't match it (see evidence.py).
+    user_id: str

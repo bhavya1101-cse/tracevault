@@ -1,33 +1,61 @@
-import { useEffect, useState } from "react";
-import TimelineItem from "../components/TimelineItem";
+import { theme, styles, severityColor } from "../theme";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
-
-function Timeline() {
-  const [evidence, setEvidence] = useState([]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = [...data].sort(
-          (a, b) => new Date(a.uploaded_at) - new Date(b.uploaded_at)
-        );
-        setEvidence(sorted);
-      })
-      .catch(() => console.error("Could not load evidence"));
-  }, []);
+function TimelineItem({ evidence, index }) {
+  const a = evidence.ai_analysis;
 
   return (
-    <div style={{ padding: "2rem", background: "#0d1117", minHeight: "100vh", color: "#c9d1d9" }}>
-      <h1 style={{ color: "#58a6ff", marginBottom: "1.5rem" }}>Attack Timeline Reconstruction</h1>
-      {evidence.length === 0 ? (
-        <p style={{ color: "#8b949e" }}>No evidence collected yet.</p>
-      ) : (
-        evidence.map((e, i) => <TimelineItem key={e.id} evidence={e} index={i} />)
-      )}
+    <div
+      style={{
+        ...styles.card,
+        display: "flex",
+        gap: "1rem",
+        alignItems: "flex-start",
+        marginBottom: "1rem",
+        borderLeft: `4px solid ${a ? severityColor(a.severity) : theme.colors.border}`,
+      }}
+    >
+      <div
+        style={{
+          minWidth: "2rem",
+          height: "2rem",
+          borderRadius: "50%",
+          background: theme.colors.surfaceAlt,
+          color: theme.colors.textMuted,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: theme.font.sizeSmall,
+        }}
+      >
+        {index + 1}
+      </div>
+
+      <div style={{ flex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+          <strong>{evidence.filename}</strong>
+          <span style={styles.mutedText}>
+            {new Date(evidence.uploaded_at).toLocaleString()}
+          </span>
+        </div>
+
+        <div style={{ marginTop: "0.35rem" }}>
+          <span style={styles.badge(theme.colors.textMuted)}>{evidence.status}</span>
+          {a && (
+            <span style={{ ...styles.badge(severityColor(a.severity)), marginLeft: "0.5rem" }}>
+              {a.attack_type} — {a.severity}
+            </span>
+          )}
+        </div>
+
+        {a && (
+          <p style={{ ...styles.mutedText, marginTop: "0.5rem", marginBottom: 0 }}>
+            {a.threat_summary}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-export default Timeline;
+export default TimelineItem;

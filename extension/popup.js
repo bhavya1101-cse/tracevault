@@ -1,310 +1,126 @@
-const TRACEVAULT_URL =
-  "https://tracevault-seven.vercel.app/";
-const BACKEND_URL = "https://tracevault-54hy.onrender.com";
-const analyzeBtn =
-  document.getElementById("analyzeBtn");
+// TraceMail popup.
+//
+// Detection now happens automatically in content.js/background.js. This
+// popup shows the most recent result and a short scan history (both kept
+// in chrome.storage.local by background.js), and lets the user manually
+// re-check the current email or jump into TraceVault.
 
-const traceVaultBtn =
-  document.getElementById("traceVaultBtn");
+const TRACEVAULT_URL = "https://tracevault-seven.vercel.app/";
 
-const statusEl =
-  document.getElementById("status");
+const analyzeBtn = document.getElementById("analyzeBtn");
+const traceVaultBtn = document.getElementById("traceVaultBtn");
+const statusEl = document.getElementById("status");
+const analysisResult = document.getElementById("analysisResult");
+const riskBadge = document.getElementById("riskBadge");
+const threatType = document.getElementById("threatType");
+const severityEl = document.getElementById("severity");
+const confidenceEl = document.getElementById("confidence");
+const threatSummaryEl = document.getElementById("threatSummary");
+const historyList = document.getElementById("historyList");
 
+let currentCaseId = null;
 
-analyzeBtn.addEventListener("click", async () => {
-
-  statusEl.textContent =
-    "Reading the email currently open in Gmail...";
-
-  try {
-
-    const tabs = await chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    });
-
-    const currentTab = tabs[0];
-
-
-    if (!currentTab || !currentTab.id) {
-
-      statusEl.textContent =
-        "Unable to access the current tab.";
-
-      return;
-    }
-
-
-    console.log("Current tab:", currentTab);
-
-
-    if (
-      !currentTab.url ||
-      !currentTab.url.startsWith(
-        "https://mail.google.com/"
-      )
-    ) {
-
-      statusEl.textContent =
-        "Please open an email in Gmail first.";
-
-      return;
-    }
-
-
-    console.log(
-      "Gmail detected. Injecting TraceMail..."
-    );
-
-
-    const results =
-      await chrome.scripting.executeScript({
-
-        target: {
-          tabId: currentTab.id
-        },
-
-        func: () => {
-
-          const subjectElement =
-            document.querySelector("h2.hP") ||
-            document.querySelector(
-              '[role="main"] h2'
-            );
-
-
-          const senderElement =
-            document.querySelector(
-              'h3 span[email]'
-            ) ||
-            document.querySelector(
-              'span[email]'
-            );
-
-
-          const bodyElement =
-            document.querySelector(".a3s.aiL") ||
-            document.querySelector(".a3s");
-
-
-          return {
-
-            subject:
-              subjectElement
-                ? subjectElement.innerText.trim()
-                : "",
-
-            sender:
-              senderElement
-                ? senderElement.innerText.trim()
-                : "",
-
-            senderEmail:
-              senderElement
-                ? (
-                    senderElement.getAttribute(
-                      "email"
-                    ) || ""
-                  )
-                : "",
-
-            body:
-              bodyElement
-                ? bodyElement.innerText.trim()
-                : "",
-
-            url:
-              window.location.href
-          };
-
-        }
-
-      });
-
-
-    console.log(
-      "Injection result:",
-      results
-    );
-
-
-    if (
-      !results ||
-      results.length === 0 ||
-      !results[0].result
-    ) {
-
-      statusEl.textContent =
-        "Could not read the current email.";
-
-      return;
-    }
-
-
-    const email =
-      results[0].result;
-
-
-    console.log(
-      "Selected email:",
-      email
-    );
-
-
-    if (
-      !email.subject &&
-      !email.sender &&
-      !email.body
-    ) {
-
-      statusEl.textContent =
-        "No open email detected. Open an email and try again.";
-
-      return;
-    }
-
-
-    const BACKEND_URL =
-  "https://tracevault-54hy.onrender.com";
-
-
-statusEl.textContent =
-  "Sending selected email to TraceVault...";
-
-
-const response = await fetch(
-  `${BACKEND_URL}/api/evidence/extension-preview`,
-  {
-    method: "POST",
-
-    headers: {
-      "Content-Type": "application/json"
-    },
-
-    body: JSON.stringify({
-      subject: email.subject,
-      sender: email.sender,
-      sender_email: email.senderEmail,
-      body: email.body,
-      source_url: email.url
-    })
+function severityColor(sev) {
+  switch ((sev || "").toLowerCase()) {
+    case "critical": return "#d1685c";
+    case "high": return "#e08a7d";
+    case "medium": return "#e0ad63";
+    case "low": return "#8bbf9f";
+    default: return "#9c8d80";
   }
-);
-
-
-if (!response.ok) {
-
-  const errorText =
-    await response.text();
-
-  throw new Error(
-    `TraceVault returned ${response.status}: ${errorText}`
-  );
 }
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str || "";
+  return div.innerHTML;
+}
 
-const result =
-  await response.json();
-console.log("TraceVault analysis:", result);
-const analysis = result.analysis;
+function renderAnalysis(analysis, caseId) {
+  currentCaseId = caseId;
 
-if (analysis) {
-  const analysisResult = document.getElementById("analysisResult");
-  const riskBadge = document.getElementById("riskBadge");
-  const threatType = document.getElementById("threatType");
-  const severity = document.getElementById("severity");
-  const confidence = document.getElementById("confidence");
-  const threatSummary = document.getElementById("threatSummary");
+  if (!analysis) {
+    analysisResult.classList.add("hidden");
+    statusEl.textContent = "No email analyzed yet. Open an email in Gmail — TraceMail checks it automatically.";
+    return;
+  }
 
   analysisResult.classList.remove("hidden");
-
   threatType.textContent = analysis.attack_type || "Unknown";
-  severity.textContent = analysis.severity || "Unknown";
+  severityEl.textContent = analysis.severity || "Unknown";
+  severityEl.style.color = severityColor(analysis.severity);
 
   const score = Number(analysis.confidence_score);
+  confidenceEl.textContent = Number.isFinite(score) ? `${Math.round(score * 100)}%` : "N/A";
 
-  confidence.textContent = Number.isFinite(score)
-    ? `${Math.round(score * 100)}%`
-    : "N/A";
+  threatSummaryEl.textContent =
+    analysis.threat_summary || analysis.root_cause_explanation || "No threat summary available.";
 
-  threatSummary.textContent =
-    analysis.threat_summary ||
-    analysis.root_cause_explanation ||
-    "No threat summary available.";
+  riskBadge.textContent = (analysis.severity || "UNKNOWN").toUpperCase();
+  riskBadge.style.background = severityColor(analysis.severity);
 
-  riskBadge.textContent =
-    (analysis.severity || "UNKNOWN").toUpperCase();
+  statusEl.textContent = caseId ? `Case ID: ${caseId}` : "Analyzed (no case ID returned).";
 }
-const caseId = result.case?.evidence_id || null;
 
-await chrome.storage.local.set({
-  selectedEmail: email,
-  traceVaultResponse: result,
-  caseId: caseId
-});
-
-if (caseId) {
-  statusEl.textContent = "Case created ✓ Investigation ID: " + caseId;
-} else {
-  statusEl.textContent = "TraceVault connected ✓";
-}
-console.log(
-  "TraceVault response:",
-  result
-);
-
-
-await chrome.storage.local.set({
-  selectedEmail: email,
-  traceVaultResponse: result
-});
-
-
-    statusEl.innerHTML = `
-        <strong>TraceVault connected ✓</strong>
-        <br>
-        Email received successfully.
-`       ;
-
-
-  } catch (error) {
-
-    console.error(
-      "TraceMail error:",
-      error
-    );
-
-
-    const errorMessage =
-      error && error.message
-        ? error.message
-        : String(error);
-
-
-    console.error(
-      "TraceMail error message:",
-      errorMessage
-    );
-
-
-    statusEl.innerHTML = `
-      <strong>TraceMail error</strong>
-      <br>
-      ${errorMessage}
+function renderHistory(history) {
+  historyList.innerHTML = "";
+  if (!history || history.length === 0) {
+    historyList.innerHTML = '<li class="history-empty">No emails scanned yet this session.</li>';
+    return;
+  }
+  history.slice(0, 8).forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "history-item";
+    li.innerHTML = `
+      <span class="history-dot" style="background:${severityColor(item.severity)}"></span>
+      <span class="history-subject">${escapeHtml(item.subject)}</span>
+      <span class="history-severity" style="color:${severityColor(item.severity)}">${item.severity}</span>
     `;
+    historyList.appendChild(li);
+  });
+}
 
-  }
+function loadState() {
+  chrome.storage.local.get(["lastAnalysis", "lastCaseId", "history"], (data) => {
+    renderAnalysis(data.lastAnalysis, data.lastCaseId);
+    renderHistory(data.history);
+  });
+}
 
+loadState();
+
+// Opening the popup means the user has seen the alerts - clear the badge.
+chrome.storage.local.set({ badgeCount: 0 });
+chrome.action.setBadgeText({ text: "" });
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.lastAnalysis || changes.lastCaseId || changes.history) loadState();
 });
 
+analyzeBtn.addEventListener("click", async () => {
+  statusEl.textContent = "Re-checking the current email...";
 
-traceVaultBtn.addEventListener(
-  "click",
-  () => {
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const currentTab = tabs[0];
 
-    chrome.tabs.create({
-      url: TRACEVAULT_URL
-    });
-
+  if (!currentTab?.url?.startsWith("https://mail.google.com/")) {
+    statusEl.textContent = "Please open Gmail first.";
+    return;
   }
-);
+
+  chrome.tabs.sendMessage(currentTab.id, { action: "ANALYZE_CURRENT_EMAIL" }, (response) => {
+    if (chrome.runtime.lastError || !response?.success) {
+      statusEl.textContent = "Could not reach the Gmail tab. Try refreshing Gmail.";
+    }
+    // Result arrives via the storage.onChanged listener above once analysis finishes.
+  });
+});
+
+traceVaultBtn.addEventListener("click", async () => {
+  const stored = await chrome.storage.local.get("tracemail_user_id");
+  const uid = stored.tracemail_user_id || "";
+  const url = currentCaseId
+    ? `${TRACEVAULT_URL}evidence?case=${currentCaseId}&uid=${uid}`
+    : `${TRACEVAULT_URL}?uid=${uid}`;
+  chrome.tabs.create({ url });
+});

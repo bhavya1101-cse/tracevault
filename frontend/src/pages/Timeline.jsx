@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import TimelineItem from "../components/TimelineItem";
 import { styles } from "../theme";
+import { apiFetch } from "../api_v2";
 
 function Timeline() {
   const [evidence, setEvidence] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/evidence")
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         const sorted = [...data].sort(
@@ -14,7 +15,7 @@ function Timeline() {
         );
         setEvidence(sorted);
       })
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   }, []);
 
   return (

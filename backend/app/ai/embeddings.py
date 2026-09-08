@@ -4,7 +4,14 @@ import chromadb
 
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
-chroma_client = chromadb.PersistentClient(path="../vector_db")
+# Absolute path anchored to this file's location, not the process's CWD.
+# The old "../vector_db" resolved differently depending on whether uvicorn
+# was launched from backend/ (Render's startCommand) or backend/app/
+# (some local setups) - same bug class as UPLOAD_DIR in evidence.py.
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_VECTOR_DB_PATH = os.path.join(_BACKEND_DIR, "vector_db")
+
+chroma_client = chromadb.PersistentClient(path=_VECTOR_DB_PATH)
 collection = chroma_client.get_or_create_collection(name="evidence_logs")
 
 

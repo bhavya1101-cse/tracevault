@@ -28,11 +28,12 @@
     <main>
 
       <div class="intro">
-        <h2>Analyze an Email</h2>
+        <h2>Automatic Threat Detection</h2>
 
         <p>
-          Analyze the email you're currently viewing
-          in Gmail for potential security threats.
+          TraceMail checks emails automatically as you open them
+          in Gmail. You'll only be interrupted when something
+          actually looks risky.
         </p>
       </div>
 
@@ -44,15 +45,16 @@
           <strong>Privacy-first</strong>
 
           <p>
-            Analysis starts only when you explicitly
-            choose to analyze an email.
+            Only the currently open email's content is sent for
+            analysis — nothing is scanned in bulk without your
+            extension being active.
           </p>
         </div>
       </div>
 
 
       <button id="analyzeBtn" class="primary-btn">
-        🔍 Analyze Email
+        🔄 Re-check This Email
       </button>
 
 
@@ -61,30 +63,35 @@
       </button>
 
 
-      <div id="status"></div>
+      <div id="status" class="status"></div>
 
-<div id="analysisResult" class="analysis-result hidden">
-  <div class="risk-badge" id="riskBadge">ANALYZING</div>
+      <div id="analysisResult" class="analysis-result hidden">
+        <div class="risk-badge" id="riskBadge">ANALYZING</div>
 
-  <div class="result-row">
-    <span>Threat Type</span>
-    <strong id="threatType">-</strong>
-  </div>
+        <div class="result-row">
+          <span>Threat Type</span>
+          <strong id="threatType">-</strong>
+        </div>
 
-  <div class="result-row">
-    <span>Severity</span>
-    <strong id="severity">-</strong>
-  </div>
+        <div class="result-row">
+          <span>Severity</span>
+          <strong id="severity">-</strong>
+        </div>
 
-  <div class="result-row">
-    <span>Confidence</span>
-    <strong id="confidence">-</strong>
-  </div>
+        <div class="result-row">
+          <span>Confidence</span>
+          <strong id="confidence">-</strong>
+        </div>
 
-  <div class="result-summary" id="threatSummary">
-    -
-  </div>
-</div>
+        <div class="result-summary" id="threatSummary">
+          -
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-title">Recent Scans</div>
+        <ul id="historyList" class="history-list"></ul>
+      </div>
 
     </main>
 

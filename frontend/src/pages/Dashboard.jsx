@@ -2,22 +2,23 @@ import { useEffect, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import StatCard from "../components/StatCard";
 import { theme, styles } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function Dashboard() {
   const [evidence, setEvidence] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         setEvidence(data);
         setLoading(false);
       })
-      .catch(() => {
-        console.error("Could not load evidence");
+      .catch((e) => {
+        console.error("Could not load evidence:", e.message);
+        setError("Could not load your evidence. If the backend was idle, this can take up to a minute — try refreshing.");
         setLoading(false);
       });
   }, []);
@@ -42,7 +43,9 @@ function Dashboard() {
       <h1 style={styles.h1}>TraceVault — Email Threat Intelligence Dashboard</h1>
 
       {loading ? (
-        <p style={styles.emptyState}>Loading evidence...</p>
+        <p style={styles.emptyState}>Loading evidence... (first load can take a minute if the server was idle)</p>
+      ) : error ? (
+        <p style={{ ...styles.emptyState, color: theme.colors.severity.High }}>{error}</p>
       ) : (
         <>
           <div style={styles.cardGrid}>

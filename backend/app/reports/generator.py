@@ -6,6 +6,24 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from app.models import Evidence
 
 
+_cell_style = ParagraphStyle(
+    "TableCell",
+    fontName="Helvetica",
+    fontSize=9,
+    leading=11,
+    textColor=colors.HexColor("#0d1117"),
+    wordWrap="CJK",  # breaks long unbroken strings (URLs, SHA-256 hashes) instead
+                      # of overflowing into the next cell - regular wordWrap only
+                      # breaks on whitespace, which URLs/hashes don't have.
+)
+_header_cell_style = ParagraphStyle(
+    "TableHeaderCell",
+    parent=_cell_style,
+    textColor=colors.white,
+    fontName="Helvetica-Bold",
+)
+
+
 def generate_report_pdf(evidence: Evidence) -> BytesIO:
     """Builds a forensic investigation report PDF for one piece of evidence."""
     buffer = BytesIO()
@@ -88,6 +106,15 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
             elements.append(_build_table(geo_rows, header=True))
             elements.append(Spacer(1, 12))
 
+        if a.url_reputations:
+            elements.append(Paragraph("URL Reputation (VirusTotal)", heading_style))
+            url_rows = [["URL", "Verdict", "Malicious", "Suspicious"]] + [
+                [u.url, u.verdict, str(u.malicious), str(u.suspicious)]
+                for u in a.url_reputations
+            ]
+            elements.append(_build_table(url_rows, header=True))
+            elements.append(Spacer(1, 12))
+
         elements.append(Paragraph("Compromised Assets", heading_style))
         if a.compromised_assets:
             asset_rows = [["Type", "Value", "Severity"]] + [
@@ -121,15 +148,28 @@ def generate_report_pdf(evidence: Evidence) -> BytesIO:
 
 
 def _build_table(data, header=False):
-    table = Table(data, colWidths=[150, 350])
+    # Column widths must match the actual column count. 2-column tables
+    # (most of this report) keep the original label/value proportions;
+    # wider tables split evenly across 500pt.
+    num_cols = len(data[0]) if data else 1
+    col_widths = [150, 350] if num_cols == 2 else [500 / num_cols] * num_cols
+
+    # Every cell is a Paragraph (not a raw string) so long unbroken text -
+    # URLs, SHA-256 hashes - wraps inside its cell instead of overflowing
+    # into the next column. This is what was broken in your PDF.
+    wrapped_rows = []
+    for row_index, row in enumerate(data):
+        is_header_row = header and row_index == 0
+        cell_style = _header_cell_style if is_header_row else _cell_style
+        wrapped_rows.append([Paragraph(str(cell), cell_style) for cell in row])
+
+    table = Table(wrapped_rows, colWidths=col_widths)
     style = [
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#30363d")),
-        ("FONTSIZE", (0, 0), (-1, -1), 9),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]
     if header:
         style.append(("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#161b22")))
-        style.append(("TEXTCOLOR", (0, 0), (-1, 0), colors.white))
     table.setStyle(TableStyle(style))
     return table
 

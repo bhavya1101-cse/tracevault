@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import { styles, severityColor } from "../theme";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+import { apiFetch } from "../api_v2";
 
 function CompromisedAssets() {
   const [assets, setAssets] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/evidence`)
+    apiFetch("/api/evidence")
       .then((res) => res.json())
       .then((data) => {
         const allAssets = data.flatMap((e) =>
@@ -18,7 +17,7 @@ function CompromisedAssets() {
         );
         setAssets(allAssets);
       })
-      .catch(() => console.error("Could not load evidence"));
+      .catch((e) => console.error("Could not load evidence:", e.message));
   }, []);
 
   const grouped = assets.reduce((acc, a) => {
