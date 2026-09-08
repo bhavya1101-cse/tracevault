@@ -1,10 +1,29 @@
 // TraceMail content script.
 //
 // Runs continuously on Gmail. Detects when the user opens a new email and
-// sends it for analysis automatically - no button click needed. Also does
-// a cheap, fully local pre-screen (no network call) on inbox list rows,
-// so "detect every mail" doesn't mean burning a Gemini/VirusTotal call on
-// every single email that scrolls past.
+// sends it for analysis automatically (silent unless High/Critical), AND
+// provides an in-page "Analyze with TraceMail" button for on-demand manual
+// checks - clicking it always shows a result, regardless of severity.
+//
+// The result card and the analyze button are both FIXED, FLOATING overlays
+// stacked together in the bottom-right corner - not injected into Gmail's
+// own message DOM, which is fragile across Gmail's different layout modes
+// (classic vs split reading-pane vs dense list).
+
+function injectBaseStyles() {
+  if (document.getElementById("tracemail-base-styles")) return;
+  const style = document.createElement("style");
+  style.id = "tracemail-base-styles";
+  style.textContent = `
+    @keyframes tracemail-slide-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #tracemail-banner button:hover { filter: brightness(0.92); }
+    #tracemail-fab:hover { filter: brightness(0.94); transform: translateY(-1px); }
+  `;
+  document.head.appendChild(style);
+}
 
 // ---------------------------------------------------------------------
 // Tier 1: local heuristic (instant, free, client-side only)
@@ -42,9 +61,6 @@ function extractLinks(bodyElement) {
   });
 }
 
-// Returns a rough 0-7ish local score, purely for instant UI feedback
-// (row badges, no network). The backend's real AI analysis is always the
-// authoritative verdict for the banner/notification.
 function localHeuristicScore(email, links) {
   const reasons = [];
   let score = 0;
@@ -113,90 +129,172 @@ function sendForAnalysis(email) {
 
 let lastAnalyzedKey = null;
 
-async function analyzeIfNewEmail() {
-  const { email, bodyElement } = getCurrentEmail();
-  if (!email.subject && !email.sender && !email.body) return; // no email open
-
+async function runAnalysis(email, opts = {}) {
   const key = `${email.senderEmail}|${email.subject}`;
-  if (key === lastAnalyzedKey) return; // already handled this one
+  if (!opts.forceShowBanner && key === lastAnalyzedKey) {
+    return { success: true, skipped: true };
+  }
   lastAnalyzedKey = key;
-
-  const links = extractLinks(bodyElement);
-  localHeuristicScore(email, links); // computed for consistency/future use; the banner below uses the backend's real verdict
 
   const result = await sendForAnalysis(email);
   if (!result.success) {
     console.error("TraceMail: analysis failed:", result.error);
-    return;
+    return result;
   }
 
   const { analysis, caseId } = result;
   const severity = (analysis?.severity || "").toLowerCase();
-  if (severity === "high" || severity === "critical") {
-    injectEmailBanner(analysis, caseId);
+  if (opts.forceShowBanner || severity === "high" || severity === "critical") {
+    showResultCard(analysis, caseId);
   } else {
-    removeEmailBanner();
+    removeResultCard();
   }
+  return result;
+}
+
+async function analyzeIfNewEmail() {
+  const { email } = getCurrentEmail();
+  if (!email.subject && !email.sender && !email.body) return;
+  await runAnalysis(email);
 }
 
 // ---------------------------------------------------------------------
-// Inline warning banner on the opened email
+// Floating result card - sits directly above the Analyze button, same
+// corner, same width, reads as one compact widget instead of two
+// unrelated floating elements.
 // ---------------------------------------------------------------------
 
-function removeEmailBanner() {
+function severityMeta(severity) {
+  switch ((severity || "").toLowerCase()) {
+    case "critical": return { color: "#b23b2e", icon: "⛔", label: "CRITICAL RISK" };
+    case "high":      return { color: "#d1685c", icon: "⚠️", label: "HIGH RISK" };
+    case "medium":    return { color: "#e0ad63", icon: "⚠️", label: "MEDIUM RISK" };
+    case "low":       return { color: "#4a9b6e", icon: "✅", label: "LOW RISK" };
+    default:          return { color: "#6b6b6b", icon: "ℹ️", label: "UNKNOWN" };
+  }
+}
+
+function removeResultCard() {
   const existing = document.getElementById("tracemail-banner");
   if (existing) existing.remove();
 }
 
-function injectEmailBanner(analysis, caseId) {
-  const container = document.querySelector(".adn.ads") || document.querySelector('[role="main"]');
-  if (!container) return;
+function showResultCard(analysis, caseId) {
+  removeResultCard();
+  injectBaseStyles();
 
-  removeEmailBanner();
+  const meta = severityMeta(analysis.severity);
 
-  const color = analysis.severity === "Critical" ? "#d1685c" : "#e08a7d";
-
-  const banner = document.createElement("div");
-  banner.id = "tracemail-banner";
-  banner.style.cssText = `
-    background:${color}22; border:1px solid ${color}; border-radius:10px;
-    padding:12px 16px; margin:12px 0; font-family:Arial,Helvetica,sans-serif;
-    font-size:13px; display:flex; justify-content:space-between; align-items:center;
-    gap:12px; color:#2b2622;
+  const card = document.createElement("div");
+  card.id = "tracemail-banner";
+  card.style.cssText = `
+    position: fixed; bottom: 86px; right: 24px; z-index: 999999;
+    width: 300px; max-width: calc(100vw - 48px); box-sizing: border-box;
+    background: #ffffff; border-radius: 12px; border-left: 5px solid ${meta.color};
+    box-shadow: 0 8px 26px rgba(0,0,0,0.18);
+    font-family: Arial, Helvetica, sans-serif; color: #2b2622;
+    animation: tracemail-slide-in 0.2s ease-out;
+    padding: 12px 14px 14px;
   `;
 
-  const textWrap = document.createElement("div");
-  textWrap.innerHTML = `
-    <strong style="color:${color};">TraceMail: ${analysis.severity} risk — ${analysis.attack_type}</strong>
-    <div style="margin-top:4px;">${analysis.threat_summary || ""}</div>
+  const header = document.createElement("div");
+  header.style.cssText = `display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;`;
+  header.innerHTML = `
+    <div style="display:flex; align-items:center; gap:6px;">
+      <span style="font-size:14px;">${meta.icon}</span>
+      <span style="font-size:10.5px; font-weight:800; letter-spacing:0.03em; color:${meta.color};">
+        ${meta.label}
+      </span>
+    </div>
   `;
-  banner.appendChild(textWrap);
+  const closeBtn = document.createElement("button");
+  closeBtn.textContent = "✕";
+  closeBtn.style.cssText = `
+    background:none; border:none; cursor:pointer; font-size:12px; color:#9a9a9a;
+    padding:2px 4px; line-height:1;
+  `;
+  closeBtn.addEventListener("click", removeResultCard);
+  header.appendChild(closeBtn);
+  card.appendChild(header);
 
-  const btn = document.createElement("button");
-  btn.textContent = "Investigate in TraceVault";
-  btn.style.cssText = `
-    background:${color}; color:#fff; border:none; border-radius:6px;
-    padding:8px 14px; font-weight:700; cursor:pointer; white-space:nowrap;
+  const title = document.createElement("div");
+  title.style.cssText = `font-size:13px; font-weight:700; margin-bottom:3px;`;
+  title.textContent = analysis.attack_type || "Unknown";
+  card.appendChild(title);
+
+  const summary = document.createElement("div");
+  summary.style.cssText = `
+    font-size:11.5px; line-height:1.45; color:#5a534c; margin-bottom:10px;
+    max-height: 66px; overflow-y: auto;
   `;
-  btn.addEventListener("click", async () => {
+  summary.textContent = analysis.threat_summary || "No summary available.";
+  card.appendChild(summary);
+
+  const investigateBtn = document.createElement("button");
+  investigateBtn.textContent = "Investigate in TraceVault";
+  investigateBtn.style.cssText = `
+    width:100%; background:${meta.color}; color:#fff; border:none; border-radius:7px;
+    padding:8px 10px; font-size:12px; font-weight:700; cursor:pointer;
+  `;
+  investigateBtn.addEventListener("click", async () => {
     const stored = await chrome.storage.local.get("tracemail_user_id");
     const uid = stored.tracemail_user_id || "";
     window.open(`https://tracevault-seven.vercel.app/evidence?case=${caseId}&uid=${uid}`, "_blank");
   });
-  banner.appendChild(btn);
+  card.appendChild(investigateBtn);
 
-  container.prepend(banner);
+  document.body.appendChild(card);
+}
+
+// ---------------------------------------------------------------------
+// Floating "Analyze with TraceMail" button (manual trigger, in-page)
+// ---------------------------------------------------------------------
+
+function injectFloatingButton() {
+  if (document.getElementById("tracemail-fab")) return;
+  injectBaseStyles();
+
+  const btn = document.createElement("button");
+  btn.id = "tracemail-fab";
+  btn.innerHTML = `<span style="font-size:14px;">🛡</span> Analyze with TraceMail`;
+  btn.style.cssText = `
+    position: fixed; bottom: 24px; right: 24px; z-index: 999998;
+    display: flex; align-items: center; gap: 8px;
+    background: #c17a5a; color: #fff; border: none; border-radius: 999px;
+    padding: 12px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px;
+    font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+    transition: transform 0.15s ease, filter 0.15s ease;
+  `;
+  btn.addEventListener("click", () => manualAnalyze(btn));
+  document.body.appendChild(btn);
+}
+
+async function manualAnalyze(btn) {
+  const { email } = getCurrentEmail();
+  if (!email.subject && !email.sender && !email.body) {
+    const original = btn.innerHTML;
+    btn.innerHTML = `<span style="font-size:14px;">🛡</span> Open an email first`;
+    setTimeout(() => (btn.innerHTML = original), 1800);
+    return;
+  }
+
+  const original = btn.innerHTML;
+  btn.innerHTML = `<span style="font-size:14px;">🛡</span> Analyzing...`;
+  btn.disabled = true;
+
+  lastAnalyzedKey = null;
+  const result = await runAnalysis(email, { forceShowBanner: true });
+
+  btn.disabled = false;
+  btn.innerHTML = result?.success
+    ? original
+    : `<span style="font-size:14px;">🛡</span> Failed - try again`;
+  if (!result?.success) setTimeout(() => (btn.innerHTML = original), 2000);
 }
 
 // ---------------------------------------------------------------------
 // Inbox list-view row badges (best effort, local heuristic only)
 // ---------------------------------------------------------------------
-// NOTE: Gmail's list-view class names (tr.zA, .bog, etc.) are minified
-// and can shift between Gmail releases. If badges stop appearing, open a
-// row in DevTools and check whether these selectors still match. This is
-// intentionally best-effort - the per-email analysis above (which uses
-// the stable h2.hP / span[email] selectors your original code already
-// relied on) is the reliable core of the extension, this is a bonus.
 
 function scanInboxRows() {
   const rows = document.querySelectorAll("tr.zA");
@@ -239,14 +337,9 @@ function injectRowBadge(row, score, reasons) {
 // ---------------------------------------------------------------------
 // Triggers
 // ---------------------------------------------------------------------
-// Gmail is a single-page app that never does a full page reload, so
-// there's no "page loaded" event to hook. Two triggers, used together:
-// hashchange (Gmail updates the URL hash when you open a thread - the
-// more deterministic signal) and a debounced MutationObserver as a
-// fallback for cases where the hash doesn't change (e.g. first load).
 
 window.addEventListener("hashchange", () => {
-  setTimeout(analyzeIfNewEmail, 500); // let Gmail finish rendering the thread
+  setTimeout(analyzeIfNewEmail, 500);
 });
 
 const observeTarget = document.querySelector('[role="main"]') || document.body;
@@ -256,14 +349,18 @@ const observer = new MutationObserver(() => {
 });
 observer.observe(observeTarget, { childList: true, subtree: true });
 
-// Cheap, local-only, runs regardless of whether an email is open.
-setInterval(scanInboxRows, 2500);
+setInterval(() => {
+  scanInboxRows();
+  injectFloatingButton();
+}, 2500);
 
-// On-demand re-check from the popup's "Re-check this email" button.
+injectFloatingButton();
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "ANALYZE_CURRENT_EMAIL") {
-    lastAnalyzedKey = null; // force re-analysis even if unchanged
-    analyzeIfNewEmail();
+    const { email } = getCurrentEmail();
+    lastAnalyzedKey = null;
+    runAnalysis(email, { forceShowBanner: true });
     sendResponse({ success: true });
   }
   return true;
