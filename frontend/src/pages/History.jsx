@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { theme, styles, severityColor } from "../theme";
-import { apiFetch, API_URL, getUserId } from "../api_v2";
+import { apiFetch } from "../api_v2";
 
 function History() {
   const [evidence, setEvidence] = useState([]);
