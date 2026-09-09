@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 import hashlib
 from fastapi.responses import StreamingResponse
@@ -38,6 +39,15 @@ class CaseHeadersRequest(BaseModel):
 def compute_sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
+
+def _safe_header_filename(name: str) -> str:
+    """Content-Disposition headers must be Latin-1 encodable. Email subjects
+    (and extension-preview filenames built from them) often contain smart
+    quotes, emoji, or other non-ASCII characters - sending those straight
+    into a response header raises UnicodeEncodeError and crashes the whole
+    download. This only sanitizes what goes in the HTTP header; the real
+    filename in the database/UI/disk is untouched."""
+    return re.sub(r'[^\x20-\x7e]', '_', name)
 
 def _get_owned_evidence(evidence_id: str, x_user_id: str) -> Evidence:
     """Looks up evidence by ID and confirms it belongs to the requesting user.
@@ -298,10 +308,11 @@ def bulk_analyze_evidence(
 def get_report(evidence_id: str, x_user_id: str = Header(...)):
     evidence = _get_owned_evidence(evidence_id, x_user_id)
     pdf_buffer = generate_report_pdf(evidence)
+    safe_filename = _safe_header_filename(evidence.filename)
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=report_{evidence.filename}.pdf"},
+        headers={"Content-Disposition": f"attachment; filename=report_{safe_filename}.pdf"},
     )
 
 
