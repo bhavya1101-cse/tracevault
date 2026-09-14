@@ -43,10 +43,10 @@ def compute_sha256(data: bytes) -> str:
 def _safe_header_filename(name: str) -> str:
     """Content-Disposition headers must be Latin-1 encodable. Email subjects
     (and extension-preview filenames built from them) often contain smart
-    quotes, emoji, or other non-ASCII characters - sending those straight
-    into a response header raises UnicodeEncodeError and crashes the whole
-    download. This only sanitizes what goes in the HTTP header; the real
-    filename in the database/UI/disk is untouched."""
+    quotes, currency symbols, or other non-ASCII characters - sending those
+    straight into a response header raises UnicodeEncodeError and crashes
+    the whole download. This only sanitizes what goes in the HTTP header;
+    the real filename in the database/UI is untouched."""
     return re.sub(r'[^\x20-\x7e]', '_', name)
 
 def _get_owned_evidence(evidence_id: str, x_user_id: str) -> Evidence:
