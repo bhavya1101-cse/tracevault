@@ -2,7 +2,7 @@ import os
 import re
 import uuid
 import hashlib
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response
 from app.reports.generator import generate_report_pdf
 from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, HTTPException, Header, Body
@@ -309,8 +309,8 @@ def get_report(evidence_id: str, x_user_id: str = Header(...)):
     evidence = _get_owned_evidence(evidence_id, x_user_id)
     pdf_buffer = generate_report_pdf(evidence)
     safe_filename = _safe_header_filename(evidence.filename)
-    return StreamingResponse(
-        pdf_buffer,
+    return Response(
+        content=pdf_buffer.getvalue(),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=report_{safe_filename}.pdf"},
     )
