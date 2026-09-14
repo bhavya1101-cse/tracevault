@@ -4,7 +4,6 @@
 
 [![Live: TraceVault](https://img.shields.io/badge/Live-TraceVault-b96a48)](https://tracevault-seven.vercel.app/)
 [![Backend: Render](https://img.shields.io/badge/Backend-Render-1f7a72)](https://tracevault-54hy.onrender.com/api/health)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
