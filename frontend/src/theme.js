@@ -1,282 +1,302 @@
-// TraceVault shared design tokens.
-// A lightweight, dependency-free "design system" — import these into every
-// page instead of hardcoding colors/spacing, so the whole app stays visually
-// consistent as more pages get added. No new npm packages required.
+// TraceVault design system - central theme tokens + shared inline styles.
+// Light "clean forensic workspace" aesthetic: warm off-white surfaces,
+// the terracotta brand accent, dark readable text.
 
 export const theme = {
   colors: {
-    bg: "#f8f5f2",
+    bg: "#faf9f6",
     surface: "#ffffff",
-    surfaceAlt: "#f3eee8",
-    border: "#e6ddd3",
-    borderSubtle: "#efe8df",
+    surfaceAlt: "#f4f2ed",
+    surfaceHover: "#efece4",
+    border: "#e3e0d7",
+    borderStrong: "#cfcabd",
 
-    primary: "#c17a5a",
-    primaryHover: "#a8664a",
-    primarySoft: "#f2e0d6",
+    primary: "#b96a48",
+    primaryHover: "#a35a3a",
+    primaryMuted: "rgba(185, 106, 72, 0.10)",
+    accent: "#1f7a72",
+    accentMuted: "rgba(31, 122, 114, 0.10)",
 
-    accent: "#8fb8a8",
-    accentSoft: "#e6f0ec",
-
-    textPrimary: "#4a3f38",
-    textMuted: "#9c8d80",
-    textOnPrimary: "#ffffff",
+    textPrimary: "#211d19",
+    textSecondary: "#4a453f",
+    textMuted: "#7a746c",
 
     severity: {
-      Low: "#8bbf9f",
-      Medium: "#e0ad63",
-      High: "#e08a7d",
-      Critical: "#d1685c",
+      Critical: "#a5271c",
+      High: "#c0522f",
+      Medium: "#a9720f",
+      Low: "#2e7d4f",
     },
-    confidence: {
-      High: "#8bbf9f",
-      Medium: "#e0ad63",
-      Low: "#e08a7d",
-    },
+
     status: {
-      success: "#8bbf9f",
-      warning: "#e0ad63",
-      error: "#e08a7d",
-      info: "#8ac4d0",
+      info: "#1f7a72",
+      success: "#2e7d4f",
+      warning: "#a9720f",
+      danger: "#a5271c",
     },
   },
+
+  radius: { sm: "8px", md: "12px", lg: "18px", pill: "999px" },
+
   font: {
-    family: "'Segoe UI', system-ui, -apple-system, sans-serif",
-    mono: "'Consolas', 'Courier New', monospace",
-    sizeH1: "1.8rem",
-    sizeH2: "1.15rem",
-    sizeBody: "0.9rem",
+    family: "'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif",
+    mono: "'JetBrains Mono', 'SFMono-Regular', Consolas, monospace",
     sizeSmall: "0.8rem",
-    sizeXSmall: "0.7rem",
+    sizeBase: "0.95rem",
+    sizeLarge: "1.15rem",
   },
-  radius: {
-    sm: "6px",
-    md: "10px",
-    lg: "16px",
-    pill: "999px",
-  },
+
   shadow: {
-    card: "0 1px 3px rgba(74, 63, 56, 0.08), 0 1px 2px rgba(74, 63, 56, 0.05)",
-    hover: "0 4px 14px rgba(74, 63, 56, 0.12)",
+    card: "0 1px 3px rgba(33, 29, 25, 0.06), 0 1px 2px rgba(33, 29, 25, 0.04)",
+    glow: "0 0 0 1px rgba(185,106,72,0.15)",
   },
-  spacing: (n) => `${n * 0.25}rem`,
 };
 
-export function severityColor(level) {
-  return theme.colors.severity[level] || theme.colors.textMuted;
+function severityColor(sev) {
+  return theme.colors.severity[sev] || theme.colors.textMuted;
 }
 
-export function confidenceColor(level) {
-  return theme.colors.confidence[level] || theme.colors.textMuted;
+function confidenceColor(conf) {
+  switch ((conf || "").toLowerCase()) {
+    case "high": return theme.colors.status.success;
+    case "medium": return theme.colors.status.warning;
+    default: return theme.colors.textMuted;
+  }
 }
 
-// Reusable style objects — spread these into your components' style props.
 export const styles = {
-  // Layout
-  page: {
-    background: theme.colors.bg,
+  appShell: {
     minHeight: "100vh",
+    background: theme.colors.bg,
     color: theme.colors.textPrimary,
-    padding: "2rem",
     fontFamily: theme.font.family,
+    display: "flex",
+    flexDirection: "column",
+  },
+
+  page: {
+    flex: 1,
+    maxWidth: "1180px",
+    width: "100%",
+    margin: "0 auto",
+    padding: "2.5rem 2rem 4rem",
     boxSizing: "border-box",
   },
-  nav: {
-    background: theme.colors.surface,
-    padding: "1rem 2rem",
-    display: "flex",
-    gap: "1.5rem",
-    alignItems: "center",
-    borderBottom: `1px solid ${theme.colors.border}`,
-    boxShadow: theme.shadow.card,
-  },
-  navLink: {
-    color: theme.colors.primary,
-    fontWeight: 600,
-    fontSize: theme.font.sizeBody,
-    textDecoration: "none",
-  },
-  navLinkActive: {
-    color: theme.colors.textOnPrimary,
-    background: theme.colors.primary,
-    padding: "0.35rem 0.85rem",
-    borderRadius: theme.radius.pill,
-    fontWeight: 600,
-    fontSize: theme.font.sizeBody,
-    textDecoration: "none",
-  },
 
-  // Text
   h1: {
-    color: theme.colors.primary,
-    fontSize: theme.font.sizeH1,
+    fontSize: "1.9rem",
     fontWeight: 800,
-    marginBottom: "0.5rem",
+    color: theme.colors.textPrimary,
+    margin: "0 0 0.5rem",
+    letterSpacing: "-0.01em",
   },
   h2: {
-    color: theme.colors.textPrimary,
-    fontSize: theme.font.sizeH2,
+    fontSize: "1.15rem",
     fontWeight: 700,
-    marginBottom: "0.75rem",
+    color: theme.colors.textPrimary,
+    margin: "0 0 0.75rem",
   },
   subtitle: {
+    fontSize: theme.font.sizeBase,
     color: theme.colors.textMuted,
-    fontSize: theme.font.sizeBody,
-    marginBottom: "1.5rem",
-  },
-  mutedText: {
-    color: theme.colors.textMuted,
-    fontSize: theme.font.sizeSmall,
-  },
-  monoText: {
-    fontFamily: theme.font.mono,
-    fontSize: theme.font.sizeSmall,
-    color: theme.colors.textPrimary,
+    margin: "0 0 1.75rem",
+    maxWidth: "640px",
+    lineHeight: 1.6,
   },
 
-  // Cards
   card: {
     background: theme.colors.surface,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: theme.radius.md,
-    padding: "1.25rem",
+    padding: "1.25rem 1.5rem",
     boxShadow: theme.shadow.card,
+  },
+  cardLabel: {
+    fontSize: theme.font.sizeSmall,
+    fontWeight: 700,
+    color: theme.colors.textMuted,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    marginBottom: "0.5rem",
   },
   cardGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
     gap: "1rem",
-    marginBottom: "1.5rem",
+    marginBottom: "1.75rem",
   },
-  cardLabel: {
-    color: theme.colors.textMuted,
+
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: theme.font.sizeBase,
+  },
+  th: {
+    textAlign: "left",
     fontSize: theme.font.sizeSmall,
-    marginBottom: "0.4rem",
-    fontWeight: 600,
+    fontWeight: 700,
+    color: theme.colors.textMuted,
     textTransform: "uppercase",
     letterSpacing: "0.03em",
+    padding: "0.65rem 0.75rem",
+    borderBottom: `1px solid ${theme.colors.border}`,
   },
-  cardValue: {
-    color: theme.colors.textPrimary,
-    fontSize: "1.4rem",
-    fontWeight: 800,
-  },
-
-  // Buttons
-  button: {
-    fontFamily: "inherit",
-    fontSize: theme.font.sizeBody,
-    fontWeight: 600,
-    background: theme.colors.primary,
-    color: theme.colors.textOnPrimary,
-    border: "none",
-    borderRadius: theme.radius.sm,
-    padding: "0.55rem 1.1rem",
-    cursor: "pointer",
-    transition: "background-color 0.15s ease, transform 0.05s ease",
-  },
-  buttonSecondary: {
-    fontFamily: "inherit",
-    fontSize: theme.font.sizeBody,
-    fontWeight: 600,
-    background: theme.colors.surface,
-    color: theme.colors.primary,
-    border: `1px solid ${theme.colors.primary}`,
-    borderRadius: theme.radius.sm,
-    padding: "0.55rem 1.1rem",
-    cursor: "pointer",
-  },
-  buttonGhost: {
-    fontFamily: "inherit",
-    fontSize: theme.font.sizeBody,
-    fontWeight: 600,
-    background: "transparent",
-    color: theme.colors.textMuted,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.sm,
-    padding: "0.55rem 1.1rem",
-    cursor: "pointer",
-  },
-  buttonDisabled: {
-    background: theme.colors.borderSubtle,
-    color: theme.colors.textMuted,
-    cursor: "not-allowed",
-  },
-
-  // Form controls
-  input: {
-    fontFamily: "inherit",
-    background: theme.colors.surface,
-    color: theme.colors.textPrimary,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.sm,
-    padding: "0.55rem 0.8rem",
-    fontSize: theme.font.sizeBody,
-  },
-  textarea: {
-    fontFamily: theme.font.mono,
-    background: theme.colors.surface,
-    color: theme.colors.textPrimary,
-    border: `1px solid ${theme.colors.border}`,
-    borderRadius: theme.radius.sm,
+  td: {
     padding: "0.75rem",
-    fontSize: theme.font.sizeSmall,
-    width: "100%",
-    boxSizing: "border-box",
-    resize: "vertical",
+    borderBottom: `1px solid ${theme.colors.border}`,
+    color: theme.colors.textSecondary,
+    verticalAlign: "top",
   },
+
   select: {
     background: theme.colors.surface,
     color: theme.colors.textPrimary,
     border: `1px solid ${theme.colors.border}`,
     borderRadius: theme.radius.sm,
-    padding: "0.5rem 0.75rem",
-    fontSize: theme.font.sizeBody,
+    padding: "0.55rem 0.75rem",
+    fontSize: theme.font.sizeBase,
   },
 
-  // Table
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    fontSize: theme.font.sizeBody,
-    background: theme.colors.surface,
-  },
-  th: {
-    textAlign: "left",
-    color: theme.colors.textMuted,
-    borderBottom: `2px solid ${theme.colors.border}`,
-    padding: "0.6rem 0.75rem",
-    fontSize: theme.font.sizeSmall,
-    textTransform: "uppercase",
-    letterSpacing: "0.02em",
-  },
-  td: {
-    padding: "0.6rem 0.75rem",
-    borderBottom: `1px solid ${theme.colors.borderSubtle}`,
-  },
-
-  // Badges / pills
   badge: (color) => ({
     display: "inline-block",
-    color,
-    border: `1px solid ${color}`,
-    background: `${color}1a`,
+    padding: "0.2rem 0.6rem",
     borderRadius: theme.radius.pill,
-    padding: "3px 10px",
-    fontSize: theme.font.sizeSmall,
+    fontSize: "0.72rem",
     fontWeight: 700,
+    color,
+    background: `${color}18`,
+    border: `1px solid ${color}44`,
   }),
 
-  // States
+  mutedText: { color: theme.colors.textMuted, fontSize: theme.font.sizeSmall },
   emptyState: {
-    textAlign: "center",
     color: theme.colors.textMuted,
-    padding: "3rem 1rem",
-    fontSize: theme.font.sizeBody,
+    fontSize: theme.font.sizeBase,
+    padding: "2.5rem 0",
+    textAlign: "center",
   },
-  divider: {
-    border: "none",
-    borderTop: `1px solid ${theme.colors.border}`,
-    margin: "1.5rem 0",
+
+  header: {
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
+    background: "rgba(250, 249, 246, 0.92)",
+    backdropFilter: "blur(8px)",
+    borderBottom: `1px solid ${theme.colors.border}`,
+  },
+  headerInner: {
+    maxWidth: "1180px",
+    margin: "0 auto",
+    padding: "0.9rem 2rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1.5rem",
+    flexWrap: "wrap",
+  },
+  logoWrap: { display: "flex", alignItems: "center", gap: "0.65rem" },
+  logoMark: {
+    width: "34px",
+    height: "34px",
+    borderRadius: theme.radius.sm,
+    background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.accent})`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "1.1rem",
+    boxShadow: theme.shadow.glow,
+    flexShrink: 0,
+  },
+  logoText: {
+    fontSize: "1.15rem",
+    fontWeight: 800,
+    letterSpacing: "-0.01em",
+    color: theme.colors.textPrimary,
+  },
+  logoSub: {
+    fontSize: "0.68rem",
+    color: theme.colors.textMuted,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    marginTop: "-2px",
+  },
+
+  nav: { display: "flex", gap: "0.25rem", flexWrap: "wrap" },
+  navLink: (active) => ({
+    padding: "0.5rem 0.85rem",
+    borderRadius: theme.radius.sm,
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    textDecoration: "none",
+    color: active ? theme.colors.textPrimary : theme.colors.textMuted,
+    background: active ? theme.colors.surfaceAlt : "transparent",
+    border: active ? `1px solid ${theme.colors.border}` : "1px solid transparent",
+    transition: "all 0.15s ease",
+    whiteSpace: "nowrap",
+  }),
+
+  statusPill: (state) => {
+    const map = {
+      online: { color: theme.colors.status.success, bg: "rgba(46,125,79,0.08)", border: "rgba(46,125,79,0.25)" },
+      offline: { color: theme.colors.status.warning, bg: "rgba(169,114,15,0.08)", border: "rgba(169,114,15,0.25)" },
+      checking: { color: theme.colors.textMuted, bg: "rgba(122,116,108,0.08)", border: "rgba(122,116,108,0.25)" },
+    };
+    const c = map[state] || map.checking;
+    return {
+      display: "flex", alignItems: "center", gap: "0.4rem",
+      fontSize: "0.72rem", fontWeight: 700, color: c.color,
+      background: c.bg, border: `1px solid ${c.border}`,
+      borderRadius: theme.radius.pill, padding: "0.3rem 0.7rem",
+      whiteSpace: "nowrap",
+    };
+  },
+  statusDot: (state) => {
+    const map = {
+      online: theme.colors.status.success,
+      offline: theme.colors.status.warning,
+      checking: theme.colors.textMuted,
+    };
+    const color = map[state] || map.checking;
+    return { width: "6px", height: "6px", borderRadius: "50%", background: color };
+  },
+
+  footer: { borderTop: `1px solid ${theme.colors.border}`, marginTop: "3rem" },
+  footerInner: {
+    maxWidth: "1180px",
+    margin: "0 auto",
+    padding: "2rem",
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "1rem",
+  },
+  footerText: { fontSize: "0.78rem", color: theme.colors.textMuted },
+  footerLinks: { display: "flex", gap: "1.25rem", alignItems: "center" },
+  footerLink: { fontSize: "0.78rem", color: theme.colors.textMuted, textDecoration: "none" },
+
+  hero: {
+    borderRadius: theme.radius.lg,
+    border: `1px solid ${theme.colors.border}`,
+    background: `linear-gradient(135deg, ${theme.colors.primaryMuted}, ${theme.colors.accentMuted})`,
+    padding: "2.25rem 2rem",
+    marginBottom: "2rem",
+  },
+  heroKicker: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "0.4rem",
+    fontSize: "0.72rem",
+    fontWeight: 700,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    color: theme.colors.accent,
+    background: theme.colors.accentMuted,
+    border: "1px solid rgba(31,122,114,0.25)",
+    borderRadius: theme.radius.pill,
+    padding: "0.3rem 0.75rem",
+    marginBottom: "1rem",
   },
 };
+
+export { severityColor, confidenceColor };

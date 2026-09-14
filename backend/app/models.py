@@ -23,6 +23,8 @@ class GeoHop(BaseModel):
     country: str | None = None
     isp: str | None = None
     confidence: str
+    proxy: bool | None = None
+    hosting: bool | None = None
 
 
 class URLReputation(BaseModel):
