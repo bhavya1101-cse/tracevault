@@ -1,14 +1,9 @@
 // TraceMail content script.
 //
-// Runs continuously on Gmail. Detects when the user opens a new email and
-// sends it for analysis automatically (silent unless High/Critical), AND
-// provides an in-page "Analyze with TraceMail" button for on-demand manual
-// checks - clicking it always shows a result, regardless of severity.
-//
-// The result card and the analyze button are both FIXED, FLOATING overlays
-// stacked together in the bottom-right corner - not injected into Gmail's
-// own message DOM, which is fragile across Gmail's different layout modes
-// (classic vs split reading-pane vs dense list).
+// MANUAL-ONLY MODE: automatic detection on every opened email has been
+// turned off for demo predictability. Analysis now only runs when the
+// user clicks "Analyze with TraceMail" (or "Re-check This Email" in the
+// popup). Inbox row badges still work (local-only, no network call).
 
 function injectBaseStyles() {
   if (document.getElementById("tracemail-base-styles")) return;
@@ -25,10 +20,6 @@ function injectBaseStyles() {
   document.head.appendChild(style);
 }
 
-// ---------------------------------------------------------------------
-// Tier 1: local heuristic (instant, free, client-side only)
-// ---------------------------------------------------------------------
-
 const URGENCY_KEYWORDS = [
   "verify your account", "verify now", "act now", "immediately", "suspended",
   "unusual activity", "confirm your identity", "click here", "limited time",
@@ -42,24 +33,6 @@ const BRAND_NAMES = [
 ];
 
 const LINK_SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly"];
-
-function extractLinks(bodyElement) {
-  if (!bodyElement) return [];
-  const anchors = Array.from(bodyElement.querySelectorAll("a[href]")).slice(0, 20);
-  return anchors.map((a) => {
-    const href = a.getAttribute("href") || "";
-    let hrefDomain = "";
-    try {
-      hrefDomain = new URL(href, window.location.href).hostname;
-    } catch {
-      hrefDomain = "";
-    }
-    const text = (a.innerText || "").trim();
-    const textLooksLikeDomain = /\.[a-z]{2,}/i.test(text) && !text.includes(" ");
-    const mismatch = textLooksLikeDomain && hrefDomain && !text.toLowerCase().includes(hrefDomain.toLowerCase());
-    return { href, hrefDomain, text, mismatch };
-  });
-}
 
 function localHeuristicScore(email, links) {
   const reasons = [];
@@ -82,12 +55,6 @@ function localHeuristicScore(email, links) {
     reasons.push(`Display name mentions "${impersonatedBrand}" but sender domain is "${senderDomain}"`);
   }
 
-  const mismatchedLink = links.find((l) => l.mismatch);
-  if (mismatchedLink) {
-    score += 2;
-    reasons.push(`Link text says "${mismatchedLink.text}" but points to ${mismatchedLink.hrefDomain}`);
-  }
-
   const shortenerHit = links.find((l) => LINK_SHORTENERS.some((s) => l.hrefDomain.includes(s)));
   if (shortenerHit) {
     score += 1;
@@ -97,17 +64,21 @@ function localHeuristicScore(email, links) {
   return { score, reasons };
 }
 
-// ---------------------------------------------------------------------
-// Reading the currently opened email
-// ---------------------------------------------------------------------
+function isRealOpenEmail(hash) {
+  return /#[a-z]+\/[A-Za-z0-9]{10,}/.test(hash);
+}
 
 function getCurrentEmail() {
   const email = { subject: "", sender: "", senderEmail: "", body: "", url: window.location.href };
 
-  const subjectElement = document.querySelector("h2.hP") || document.querySelector('[role="main"] h2');
+  if (!isRealOpenEmail(window.location.hash)) {
+    return { email, bodyElement: null };
+  }
+
+  const subjectElement = document.querySelector("h2.hP");
   if (subjectElement) email.subject = subjectElement.innerText.trim();
 
-  const senderElement = document.querySelector("h3 span[email]") || document.querySelector("span[email]");
+  const senderElement = document.querySelector("h3 span[email]");
   if (senderElement) {
     email.senderEmail = senderElement.getAttribute("email") || "";
     email.sender = senderElement.innerText.trim();
@@ -130,11 +101,7 @@ function sendForAnalysis(email) {
 let lastAnalyzedKey = null;
 
 async function runAnalysis(email, opts = {}) {
-  const key = `${email.senderEmail}|${email.subject}`;
-  if (!opts.forceShowBanner && key === lastAnalyzedKey) {
-    return { success: true, skipped: true };
-  }
-  lastAnalyzedKey = key;
+  lastAnalyzedKey = `${email.senderEmail}|${email.subject}`;
 
   const result = await sendForAnalysis(email);
   if (!result.success) {
@@ -143,33 +110,16 @@ async function runAnalysis(email, opts = {}) {
   }
 
   const { analysis, caseId } = result;
-  const severity = (analysis?.severity || "").toLowerCase();
-  if (opts.forceShowBanner || severity === "high" || severity === "critical") {
-    showResultCard(analysis, caseId);
-  } else {
-    removeResultCard();
-  }
+  showResultCard(analysis, caseId);
   return result;
 }
 
-async function analyzeIfNewEmail() {
-  const { email } = getCurrentEmail();
-  if (!email.subject && !email.sender && !email.body) return;
-  await runAnalysis(email);
-}
-
-// ---------------------------------------------------------------------
-// Floating result card - sits directly above the Analyze button, same
-// corner, same width, reads as one compact widget instead of two
-// unrelated floating elements.
-// ---------------------------------------------------------------------
-
 function severityMeta(severity) {
   switch ((severity || "").toLowerCase()) {
-    case "critical": return { color: "#b23b2e", icon: "⛔", label: "CRITICAL RISK" };
-    case "high":      return { color: "#d1685c", icon: "⚠️", label: "HIGH RISK" };
-    case "medium":    return { color: "#e0ad63", icon: "⚠️", label: "MEDIUM RISK" };
-    case "low":       return { color: "#4a9b6e", icon: "✅", label: "LOW RISK" };
+    case "critical": return { color: "#a5271c", icon: "⛔", label: "CRITICAL RISK" };
+    case "high":      return { color: "#c0522f", icon: "⚠️", label: "HIGH RISK" };
+    case "medium":    return { color: "#a9720f", icon: "⚠️", label: "MEDIUM RISK" };
+    case "low":       return { color: "#2e7d4f", icon: "✅", label: "LOW RISK" };
     default:          return { color: "#6b6b6b", icon: "ℹ️", label: "UNKNOWN" };
   }
 }
@@ -246,10 +196,6 @@ function showResultCard(analysis, caseId) {
   document.body.appendChild(card);
 }
 
-// ---------------------------------------------------------------------
-// Floating "Analyze with TraceMail" button (manual trigger, in-page)
-// ---------------------------------------------------------------------
-
 function injectFloatingButton() {
   if (document.getElementById("tracemail-fab")) return;
   injectBaseStyles();
@@ -260,7 +206,7 @@ function injectFloatingButton() {
   btn.style.cssText = `
     position: fixed; bottom: 24px; right: 24px; z-index: 999998;
     display: flex; align-items: center; gap: 8px;
-    background: #c17a5a; color: #fff; border: none; border-radius: 999px;
+    background: #b96a48; color: #fff; border: none; border-radius: 999px;
     padding: 12px 20px; font-family: Arial, Helvetica, sans-serif; font-size: 13px;
     font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.22);
     transition: transform 0.15s ease, filter 0.15s ease;
@@ -271,7 +217,7 @@ function injectFloatingButton() {
 
 async function manualAnalyze(btn) {
   const { email } = getCurrentEmail();
-  if (!email.subject && !email.sender && !email.body) {
+  if (!email.subject || !email.senderEmail) {
     const original = btn.innerHTML;
     btn.innerHTML = `<span style="font-size:14px;">🛡</span> Open an email first`;
     setTimeout(() => (btn.innerHTML = original), 1800);
@@ -282,8 +228,7 @@ async function manualAnalyze(btn) {
   btn.innerHTML = `<span style="font-size:14px;">🛡</span> Analyzing...`;
   btn.disabled = true;
 
-  lastAnalyzedKey = null;
-  const result = await runAnalysis(email, { forceShowBanner: true });
+  const result = await runAnalysis(email);
 
   btn.disabled = false;
   btn.innerHTML = result?.success
@@ -291,10 +236,6 @@ async function manualAnalyze(btn) {
     : `<span style="font-size:14px;">🛡</span> Failed - try again`;
   if (!result?.success) setTimeout(() => (btn.innerHTML = original), 2000);
 }
-
-// ---------------------------------------------------------------------
-// Inbox list-view row badges (best effort, local heuristic only)
-// ---------------------------------------------------------------------
 
 function scanInboxRows() {
   const rows = document.querySelectorAll("tr.zA");
@@ -328,27 +269,15 @@ function injectRowBadge(row, score, reasons) {
   badge.textContent = "⚠";
   badge.style.cssText = `
     display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px;
-    background:${score >= 3 ? "#d1685c" : "#e0ad63"}; color:#fff; font-size:11px;
+    background:${score >= 3 ? "#c0522f" : "#a9720f"}; color:#fff; font-size:11px;
     font-weight:700; vertical-align:middle;
   `;
   subjectCell.appendChild(badge);
 }
 
-// ---------------------------------------------------------------------
-// Triggers
-// ---------------------------------------------------------------------
-
-window.addEventListener("hashchange", () => {
-  setTimeout(analyzeIfNewEmail, 500);
-});
-
-const observeTarget = document.querySelector('[role="main"]') || document.body;
-const observer = new MutationObserver(() => {
-  clearTimeout(window.__tracemailDebounce);
-  window.__tracemailDebounce = setTimeout(analyzeIfNewEmail, 800);
-});
-observer.observe(observeTarget, { childList: true, subtree: true });
-
+// NOTE: automatic hashchange / MutationObserver triggers have been
+// removed on purpose - scanInboxRows (badges only, no network call) and
+// the floating button are the only things that run now.
 setInterval(() => {
   scanInboxRows();
   injectFloatingButton();
@@ -359,8 +288,7 @@ injectFloatingButton();
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "ANALYZE_CURRENT_EMAIL") {
     const { email } = getCurrentEmail();
-    lastAnalyzedKey = null;
-    runAnalysis(email, { forceShowBanner: true });
+    runAnalysis(email);
     sendResponse({ success: true });
   }
   return true;
