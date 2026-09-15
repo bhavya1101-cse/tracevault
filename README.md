@@ -4,6 +4,7 @@
 
 [![Live: TraceVault](https://img.shields.io/badge/Live-TraceVault-b96a48)](https://tracevault-seven.vercel.app/)
 [![Backend: Render](https://img.shields.io/badge/Backend-Render-1f7a72)](https://tracevault-54hy.onrender.com/api/health)
+[![YouTube](https://img.shields.io/badge/YouTube-Prototype%20Demo-red?logo=youtube)](https://youtu.be/xCil3B_eL1w)
 
 ---
 
